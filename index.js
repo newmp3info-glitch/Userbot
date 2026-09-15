@@ -337,7 +337,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (সংশোধিত: ইমেজ লিংক থেকে Buffer তৈরি করে পাঠানো হয়েছে)
+// SEND TO CHANNEL
 // ============================================================
 
 async function sendFinalPost(
@@ -350,7 +350,6 @@ async function sendFinalPost(
         targetChat
     );
 
-    // Fetch image URL into Buffer so GramJS can send it properly
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
         throw new Error(`Failed to download image from URL: ${imageResponse.statusText}`);
@@ -517,7 +516,7 @@ async function main() {
     );
 
     // ========================================================
-    // NEW MESSAGE EVENT
+    // NEW MESSAGE EVENT (সংশোধিত: sourceEntity এর পরিবর্তে SOURCE_CHANNEL স্ট্রিং ব্যবহার করা হয়েছে)
     // ========================================================
 
     client.addEventHandler(
@@ -773,7 +772,7 @@ async function main() {
         },
 
         new NewMessage({
-            chats: [sourceEntity]
+            chats: [SOURCE_CHANNEL]
         })
     );
 
