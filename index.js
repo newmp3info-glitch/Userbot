@@ -42,7 +42,7 @@ const DESTINATION_CHANNELS = [
 ];
 
 // ============================================================
-// GAME LINKS
+// YOUR PERSONAL REFERRAL GAME LINKS (আপনাদের নিজস্ব লিংক)
 // ============================================================
 
 const GAME_LINKS = {
@@ -137,7 +137,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// FLEXIBLE GAME NAME DETECTION
+// GAME NAME DETECTION
 // ============================================================
 
 function extractGameName(rawText) {
@@ -166,13 +166,14 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// FLEXIBLE PROMO CODE DETECTION
+// FIXED PROMO CODE DETECTION (Keeps full code including .com/.net)
 // ============================================================
 
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
-    const match = rawText.match(/(?:CLAIM|Code|PROMO\s*CODE)\s*(?:➜|➔|→|>>|:|-)?\s*([A-Za-z0-9_-]+)/i);
+    // Looks for Claim > or Claim: and grabs the full text/domain (.com, .net, etc.)
+    const match = rawText.match(/(?:CLAIM|Code|PROMO\s*CODE)\s*(?:➜|➔|→|>>|:|-)?\s*([^\s\r\n]+)/i);
     if (match && match[1]) {
         return match[1].trim();
     }
@@ -182,7 +183,7 @@ function extractPromoCode(rawText) {
         if (line.includes('➜') || line.includes('➔') || line.includes('→') || line.includes(':')) {
             const parts = line.split(/➜|➔|→|>>|:/);
             if (parts[1] && parts[1].trim().length >= 3) {
-                return parts[1].trim().split(' ')[0];
+                return parts[1].trim().split(/\s+/)[0];
             }
         }
     }
@@ -191,7 +192,7 @@ function extractPromoCode(rawText) {
 }
 
 // ============================================================
-// GAME LINK FINDER
+// GAME LINK FINDER (From your predefined list)
 // ============================================================
 
 function findGameLink(gameName) {
@@ -211,7 +212,7 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// TEMPLATE (Compact Single-line Footer)
+// TEMPLATE
 // ============================================================
 
 function buildCaption(
@@ -440,8 +441,9 @@ async function main() {
                 console.log(`🎮 Game: ${gameName}`);
                 console.log(`🎟️ Promo Code: ${promoCode}`);
 
+                // Automatically fetches your personal link from GAME_LINKS dictionary based on the game name
                 const gameLink = findGameLink(gameName);
-                console.log(`🔗 Game Link matched successfully`);
+                console.log(`🔗 Personal Game Link matched successfully`);
 
                 const formattedText = buildCaption(
                     gameName,
