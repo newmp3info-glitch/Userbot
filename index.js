@@ -17,7 +17,7 @@ const SESSION_STRING = process.env.SESSION_STRING || "";
 
 const GITHUB_USER = "newmp3info-glitch";
 const REPO_NAME = "Userbot";
-const GITHUB_BRANCH = "main";
+const GITHUB_BRANCH = "main"; // প্রধান ব্রাঞ্চ
 
 // ============================================================
 // SOURCE CHANNEL
@@ -228,20 +228,6 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// IMAGE URL
-// ============================================================
-
-function getImageUrl(gameName) {
-    const normalized = normalizeGameName(gameName);
-    const imageFileName = normalized.replace(/\s+/g, "-") + ".jpg";
-    return (
-        `https://raw.githubusercontent.com/` +
-        `${GITHUB_USER}/${REPO_NAME}/` +
-        `${GITHUB_BRANCH}/${imageFileName}`
-    );
-}
-
-// ============================================================
 // TELEGRAM INLINE BUTTONS
 // ============================================================
 
@@ -319,43 +305,57 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (User-Agent সহ ফেচ করার ব্যবস্থা)
+// SEND TO CHANNEL (main এবং master উভয় ব্রাঞ্চ অটো-চেক করার ব্যবস্থা)
 // ============================================================
 
 async function sendFinalPost(
     client,
     targetChat,
-    imageUrl,
+    gameName,
     caption
 ) {
     const entity = await client.getEntity(targetChat);
+    const normalized = normalizeGameName(gameName);
+    const imageFileName = normalized.replace(/\s+/g, "-") + ".jpg";
 
-    console.log(`📥 Downloading image with User-Agent from: ${imageUrl}`);
-    
-    // গিটহাবের সার্ভারের জন্য User-Agent হেডার যুক্ত করা হলো
-    const imageResponse = await fetch(imageUrl, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-        }
-    });
+    const branches = [GITHUB_BRANCH, "main", "master"];
+    let imageBuffer = null;
 
-    if (!imageResponse.ok) {
-        throw new Error(`Failed to download image from GitHub: ${imageUrl} (Status: ${imageResponse.statusText})`);
+    for (const branch of [...new Set(branches)]) {
+        const imageUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${branch}/${imageFileName}`;
+        try {
+            const res = await fetch(imageUrl, {
+                headers: { "User-Agent": "Mozilla/5.0" }
+            });
+            if (res.ok) {
+                const arrayBuffer = await res.arrayBuffer();
+                imageBuffer = Buffer.from(arrayBuffer);
+                break;
+            }
+        } catch (e) {}
     }
 
-    const arrayBuffer = await imageResponse.arrayBuffer();
-    const imageBuffer = Buffer.from(arrayBuffer);
-
-    return await client.sendFile(
-        entity,
-        {
-            file: imageBuffer,
-            caption: caption,
-            parseMode: "html",
-            buttons: buildButtons(),
-            forceDocument: false
-        }
-    );
+    if (imageBuffer) {
+        return await client.sendFile(
+            entity,
+            {
+                file: imageBuffer,
+                caption: caption,
+                parseMode: "html",
+                buttons: buildButtons(),
+                forceDocument: false
+            }
+        );
+    } else {
+        return await client.sendMessage(
+            entity,
+            {
+                message: caption,
+                parseMode: "html",
+                buttons: buildButtons()
+            }
+        );
+    }
 }
 
 // ============================================================
@@ -541,13 +541,6 @@ async function main() {
                 console.log(`🔗 Game Link matched successfully`);
 
                 // --------------------------------------------
-                // IMAGE
-                // --------------------------------------------
-
-                const imageUrl = getImageUrl(gameName);
-                console.log(`🖼️ Image URL: ${imageUrl}`);
-
-                // --------------------------------------------
                 // BUILD TEMPLATE
                 // --------------------------------------------
 
@@ -566,12 +559,12 @@ async function main() {
                 for (const targetChat of DESTINATION_CHANNELS) {
 
                     try {
-                        console.log(`📤 Sending image post → ${targetChat}`);
+                        console.log(`📤 Sending post → ${targetChat}`);
 
                         await sendFinalPost(
                             client,
                             targetChat,
-                            imageUrl,
+                            gameName,
                             formattedText
                         );
 
