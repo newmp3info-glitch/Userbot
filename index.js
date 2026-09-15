@@ -319,7 +319,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (আবশ্যিকভাবে ছবিসহ পাঠানোর ব্যবস্থা)
+// SEND TO CHANNEL (User-Agent সহ ফেচ করার ব্যবস্থা)
 // ============================================================
 
 async function sendFinalPost(
@@ -330,9 +330,15 @@ async function sendFinalPost(
 ) {
     const entity = await client.getEntity(targetChat);
 
-    console.log(`📥 Downloading image from: ${imageUrl}`);
-    const imageResponse = await fetch(imageUrl);
+    console.log(`📥 Downloading image with User-Agent from: ${imageUrl}`);
     
+    // গিটহাবের সার্ভারের জন্য User-Agent হেডার যুক্ত করা হলো
+    const imageResponse = await fetch(imageUrl, {
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
+    });
+
     if (!imageResponse.ok) {
         throw new Error(`Failed to download image from GitHub: ${imageUrl} (Status: ${imageResponse.statusText})`);
     }
@@ -552,7 +558,7 @@ async function main() {
                 );
 
                 // --------------------------------------------
-                // SEND TO ALL 8 CHANNELS (ছবিসহ পাঠানো বাধ্যতামূলক)
+                // SEND TO ALL 8 CHANNELS
                 // --------------------------------------------
 
                 let successCount = 0;
