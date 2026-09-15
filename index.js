@@ -41,39 +41,6 @@ const DESTINATION_CHANNELS = [
 ];
 
 // ============================================================
-// FIXED BUTTONS
-// ============================================================
-
-const FIXED_BUTTONS = [
-    [
-        {
-            text: "🎰 New Game 45",
-            url: "https://t.me/VipYonoFreeCode/3783"
-        },
-        {
-            text: "🎰 Total Game 70",
-            url: "https://t.me/AllYonoRummyCode/138"
-        }
-    ],
-    [
-        {
-            text: "🤖 Yono AI Bot 🤖",
-            url: "https://t.me/YonoGamingHeadAIBot"
-        },
-        {
-            text: "🤖 Promo Code Bot 🤖",
-            url: "https://t.me/spin_crush_bot"
-        }
-    ],
-    [
-        {
-            text: "🔥 Yono Master App 🔥",
-            url: "https://www.fastyonoapp.online/"
-        }
-    ]
-];
-
-// ============================================================
 // GAME LINKS
 // ============================================================
 
@@ -228,22 +195,7 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// TELEGRAM INLINE BUTTONS (Fixed with 'new')
-// ============================================================
-
-function buildButtons() {
-    return FIXED_BUTTONS.map(row =>
-        row.map(button =>
-            new Api.KeyboardButtonUrl({
-                text: button.text,
-                url: button.url
-            })
-        )
-    );
-}
-
-// ============================================================
-// TEMPLATE
+// TEMPLATE WITH FIXED BOTTOM LINKS (Since Userbot can't send inline buttons)
 // ============================================================
 
 function buildCaption(
@@ -265,15 +217,19 @@ function buildCaption(
         `</blockquote>\n\n` +
 
         `🎰 <b>${safeGameName.toUpperCase()} LINK</b> 👉 ` +
-        `<a href="${gameLink}">` +
-        `<b>Download Now</b>` +
-        `</a> 📱\n\n` +
+        `<a href="${gameLink}"><b>Download Now</b></a> 📱\n\n` +
 
         `💰 <i>Minimum Amount ₹100 First Withdrawal</i> 💸\n\n` +
 
         `<blockquote>` +
         `🔥 Join &amp; Pin this channel for daily promo codes!` +
-        `</blockquote>`
+        `</blockquote>\n\n` +
+
+        `━━━━━━━━━━━━━━━━━━\n` +
+        `🔗 <b>More Games &amp; Channels:</b>\n` +
+        `👉 <a href="https://t.me/VipYonoFreeCode/3783">🎰 New Game 45</a> | <a href="https://t.me/AllYonoRummyCode/138">🎰 Total Game 70</a>\n` +
+        `👉 <a href="https://t.me/YonoGamingHeadAIBot">🤖 Yono AI Bot</a> | <a href="https://t.me/spin_crush_bot">🤖 Promo Code Bot</a>\n` +
+        `👉 <a href="https://www.fastyonoapp.online/">🔥 Yono Master App</a>`
     );
 }
 
@@ -342,17 +298,16 @@ async function sendFinalPost(
                 file: imageBuffer,
                 caption: caption,
                 parseMode: "html",
-                buttons: buildButtons(),
                 forceDocument: false
             }
         );
     } else {
+        console.log(`⚠️ Image not found on GitHub for '${gameName}' (${imageFileName}), sending text only.`);
         return await client.sendMessage(
             entity,
             {
                 message: caption,
-                parseMode: "html",
-                buttons: buildButtons()
+                parseMode: "html"
             }
         );
     }
@@ -412,7 +367,6 @@ async function main() {
 
     console.log(`🎯 Source: ${SOURCE_CHANNEL}`);
     console.log(`📤 Destinations: ${DESTINATION_CHANNELS.length}`);
-    console.log("🔘 Fixed buttons: 5");
     console.log("==============================================");
 
     // ========================================================
