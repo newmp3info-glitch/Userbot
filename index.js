@@ -9,7 +9,7 @@ const apiHash = process.env.API_HASH;
 const stringSession = new StoreSession("userbot_session");
 
 // ১. সোর্স চ্যানেল যেখান থেকে ইউজার বট পোস্ট পড়বে
-const SOURCE_CHANNEL = 'AllYonoPromoCodes';
+const SOURCE_CHANNEL = 'AllYonoPromoCodegdfggs';
 
 // ২. আপনার ১০টি টার্গেট চ্যানেল (যেখানে বট পোস্টগুলো পাঠাবে)
 const DESTINATION_CHANNELS = [
