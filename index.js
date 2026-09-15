@@ -128,7 +128,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// PERFECT GAME NAME DETECTION (Keeps full names like Bet-213, Rummy-77)
+// FIXED FULL GAME NAME DETECTION (Captures Bet-213 fully without cutting)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -138,24 +138,21 @@ function extractGameName(rawText) {
     
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
-            // Cut everything from "New PromoCode" or "PromoCode" onwards
-            const idx = line.search(/new\s*promocode|promocode|claim/i);
-            let namePart = idx !== -1 ? line.substring(0, idx) : line;
-            
-            // Remove emojis and unwanted symbols, but PRESERVE hyphens and numbers (e.g., Bet-213)
-            namePart = namePart.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-            namePart = namePart.replace(/[\/\–\—\>\:]+/g, " ").trim();
-            namePart = namePart.replace(/\s+/g, " ").trim();
-            
-            if (namePart.length > 0) {
-                return namePart;
+            const match = line.match(/^(.*?)(?:\s+New|\s+PromoCode|\s+Claim)/i);
+            if (match && match[1]) {
+                let namePart = match[1].replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
+                namePart = namePart.replace(/[\/\–\—\>\:]+/g, " ").trim();
+                namePart = namePart.replace(/\s+/g, " ").trim();
+                if (namePart.length > 0) {
+                    return namePart;
+                }
             }
         }
     }
 
     if (lines.length > 0) {
-        const idx = lines[0].search(/new\s*promocode.*$/i);
-        let firstLine = idx !== -1 ? lines[0].substring(0, idx) : lines[0];
+        const match = lines[0].match(/^(.*?)(?:\s+New|\s+PromoCode|\s+Claim)/i);
+        let firstLine = match && match[1] ? match[1] : lines[0];
         firstLine = firstLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
         firstLine = firstLine.replace(/[\/\–\—\>\:]+/g, " ").trim();
         firstLine = firstLine.replace(/\s+/g, " ").trim();
