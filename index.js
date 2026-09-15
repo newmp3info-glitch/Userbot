@@ -32,12 +32,6 @@ const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 const DESTINATION_CHANNELS = [
     "@totalyonocode",
-    "@fullyonocode",
-    "@superyonocode",
-    "@LootYonoCode",
-    "@FastYonoCode",
-    "@RealYonoCode",
-    "@VipFreeYonoCode",
     "@WinRummynet"
 ];
 
@@ -134,7 +128,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION
+// CLEAN GAME NAME DETECTION (Removes all emojis and symbols)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -145,6 +139,8 @@ function extractGameName(rawText) {
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
             let cleanLine = line.replace(/new\s*promocode|promocode|claim/gi, "").trim();
+            // Completely strip out all emojis and arrows
+            cleanLine = cleanLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
             cleanLine = cleanLine.replace(/[\/\-\–\—\>]+/g, " ").trim();
             if (cleanLine.length > 1) {
                 return cleanLine;
@@ -154,6 +150,7 @@ function extractGameName(rawText) {
 
     if (lines.length > 0) {
         let firstLine = lines[0].replace(/new\s*promocode.*$/i, "").trim();
+        firstLine = firstLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
         firstLine = firstLine.replace(/[\/\-\–\—\>]+/g, " ").trim();
         if (firstLine.length > 1) {
             return firstLine;
@@ -164,7 +161,7 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// SECURE PROMO CODE DETECTION (Strips Emojis & Keeps Full Code)
+// CLEAN PROMO CODE DETECTION (Strips all emojis and unwanted text)
 // ============================================================
 
 function extractPromoCode(rawText) {
@@ -176,12 +173,12 @@ function extractPromoCode(rawText) {
             const parts = line.split(/>>|➜|➔|→|:/);
             if (parts.length > 1) {
                 let candidate = parts.slice(1).join(':').trim();
-                // Remove any emojis (like 👇, 👉, etc.) completely
+                // Completely strip out emojis like 👇, 👉, etc.
                 candidate = candidate.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
                 
                 const tokens = candidate.split(/\s+/);
                 for (const token of tokens) {
-                    if (token.length >= 3) {
+                    if (token.length >= 3 && !token.includes('http')) {
                         return token.trim();
                     }
                 }
@@ -199,7 +196,7 @@ function extractPromoCode(rawText) {
 }
 
 // ============================================================
-// SAFE GAME LINK FINDER (Prioritizes Longest Match)
+// SMART GAME LINK FINDER (Longest-first matching)
 // ============================================================
 
 function findGameLink(gameName) {
@@ -209,7 +206,6 @@ function findGameLink(gameName) {
         return GAME_LINKS[normalized];
     }
 
-    // Sort keys by length descending to match longest/most specific names first
     const sortedKeys = Object.keys(GAME_LINKS).sort((a, b) => b.length - a.length);
 
     for (const key of sortedKeys) {
@@ -219,12 +215,11 @@ function findGameLink(gameName) {
         }
     }
 
-    // Fallback to the first available link in your list (Never external)
     return Object.values(GAME_LINKS)[0];
 }
 
 // ============================================================
-// TEMPLATE
+// CLEAN TEMPLATE (Strictly controlled design, no source emojis)
 // ============================================================
 
 function buildCaption(
