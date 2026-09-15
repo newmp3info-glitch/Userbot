@@ -32,6 +32,12 @@ const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 const DESTINATION_CHANNELS = [
     "@totalyonocode",
+    "@fullyonocode",
+    "@superyonocode",
+    "@LootYonoCode",
+    "@FastYonoCode",
+    "@RealYonoCode",
+    "@VipFreeYonoCode",
     "@WinRummynet"
 ];
 
@@ -128,7 +134,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// PRECISE FULL GAME NAME DETECTION (Keeps hyphens and numbers like Bet-213)
+// PERFECT GAME NAME DETECTION (Keeps full names like Bet-213, Rummy-77)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -138,21 +144,28 @@ function extractGameName(rawText) {
     
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
-            // Remove the keywords and emojis, but KEEP hyphens and numbers (e.g., Bet-213)
-            let cleanLine = line.replace(/new\s*promocode|promocode|claim/gi, "").trim();
-            cleanLine = cleanLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-            cleanLine = cleanLine.replace(/[\/\–\—\>]+/g, " ").trim();
-            if (cleanLine.length > 1) {
-                return cleanLine;
+            // Cut everything from "New PromoCode" or "PromoCode" onwards
+            const idx = line.search(/new\s*promocode|promocode|claim/i);
+            let namePart = idx !== -1 ? line.substring(0, idx) : line;
+            
+            // Remove emojis and unwanted symbols, but PRESERVE hyphens and numbers (e.g., Bet-213)
+            namePart = namePart.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
+            namePart = namePart.replace(/[\/\–\—\>\:]+/g, " ").trim();
+            namePart = namePart.replace(/\s+/g, " ").trim();
+            
+            if (namePart.length > 0) {
+                return namePart;
             }
         }
     }
 
     if (lines.length > 0) {
-        let firstLine = lines[0].replace(/new\s*promocode.*$/i, "").trim();
+        const idx = lines[0].search(/new\s*promocode.*$/i);
+        let firstLine = idx !== -1 ? lines[0].substring(0, idx) : lines[0];
         firstLine = firstLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-        firstLine = firstLine.replace(/[\/\–\—\>]+/g, " ").trim();
-        if (firstLine.length > 1) {
+        firstLine = firstLine.replace(/[\/\–\—\>\:]+/g, " ").trim();
+        firstLine = firstLine.replace(/\s+/g, " ").trim();
+        if (firstLine.length > 0) {
             return firstLine;
         }
     }
