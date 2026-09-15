@@ -13,11 +13,9 @@ const stringSession = new StringSession(process.env.SESSION_STRING || "");
 const GITHUB_USER = "newmp3info-glitch";
 const REPO_NAME = "Userbot";
 
-const SOURCE_CHANNEL = 'AllYonoPtteyooromoCodes';
+const SOURCE_CHANNEL = 'AllYonorummyCode';
 
 const DESTINATION_CHANNELS = [
-    'vipyonofreecode',
-    'allyonorummycode',
     'totalyonocode',
     'fullyonocode',
     'superyonocode',
