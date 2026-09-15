@@ -20,24 +20,24 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL
+// SOURCE CHANNEL (সংশোধিত: @ যুক্ত করা হয়েছে)
 // ============================================================
 
-const SOURCE_CHANNEL = "AllYonorummyCode";
+const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 // ============================================================
-// 8 DESTINATION CHANNELS
+// 8 DESTINATION CHANNELS (সংশোধিত: @ যুক্ত করা হয়েছে)
 // ============================================================
 
 const DESTINATION_CHANNELS = [
-    "totalyonocode",
-    "fullyonocode",
-    "superyonocode",
-    "LootYonoCode",
-    "FastYonoCode",
-    "RealYonoCode",
-    "VipFreeYonoCode",
-    "WinRummynet"
+    "@totalyonocode",
+    "@fullyonocode",
+    "@superyonocode",
+    "@LootYonoCode",
+    "@FastYonoCode",
+    "@RealYonoCode",
+    "@VipFreeYonoCode",
+    "@WinRummynet"
 ];
 
 // ============================================================
@@ -437,7 +437,7 @@ async function main() {
     );
 
     console.log(
-        `🎯 Source: @${SOURCE_CHANNEL}`
+        `🎯 Source: ${SOURCE_CHANNEL}`
     );
 
     console.log(
@@ -462,7 +462,7 @@ async function main() {
         );
 
     console.log(
-        `✅ Source channel found: @${SOURCE_CHANNEL}`
+        `✅ Source channel found: ${SOURCE_CHANNEL}`
     );
 
     // ========================================================
@@ -480,13 +480,13 @@ async function main() {
             );
 
             console.log(
-                `✅ Target channel found: @${destination}`
+                `✅ Target channel found: ${destination}`
             );
 
         } catch (error) {
 
             console.error(
-                `❌ Target channel not found: @${destination}`
+                `❌ Target channel not found: ${destination}`
             );
 
         }
@@ -501,7 +501,7 @@ async function main() {
     );
 
     console.log(
-        `👀 Watching @${SOURCE_CHANNEL}`
+        `👀 Watching ${SOURCE_CHANNEL}`
     );
 
     console.log(
@@ -708,7 +708,7 @@ async function main() {
                     try {
 
                         console.log(
-                            `📤 Sending → @${targetChat}`
+                            `📤 Sending → ${targetChat}`
                         );
 
                         await sendFinalPost(
@@ -721,7 +721,7 @@ async function main() {
                         successCount++;
 
                         console.log(
-                            `✅ Sent → @${targetChat}`
+                            `✅ Sent → ${targetChat}`
                         );
 
                         await new Promise(
@@ -735,7 +735,7 @@ async function main() {
                     } catch (error) {
 
                         console.error(
-                            `❌ @${targetChat}: ${error.message}`
+                            `❌ ${targetChat}: ${error.message}`
                         );
 
                     }
