@@ -211,7 +211,7 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// TEMPLATE
+// TEMPLATE (Compact Single-line Footer)
 // ============================================================
 
 function buildCaption(
@@ -241,11 +241,7 @@ function buildCaption(
         `🔥 Join &amp; Pin this channel for daily promo codes!` +
         `</blockquote>\n\n` +
 
-        `━━━━━━━━━━━━━━━━━━\n` +
-        `🔗 <b>More Games &amp; Channels:</b>\n` +
-        `👉 <a href="https://t.me/VipYonoFreeCode/3783">🎰 New Game 45</a> | <a href="https://t.me/AllYonoRummyCode/138">🎰 Total Game 70</a>\n` +
-        `👉 <a href="https://t.me/YonoGamingHeadAIBot">🤖 Yono AI Bot</a> | <a href="https://t.me/spin_crush_bot">🤖 Promo Code Bot</a>\n` +
-        `👉 <a href="https://www.fastyonoapp.online/">🔥 Yono Master App</a>`
+        `🔗 <a href="https://t.me/VipYonoFreeCode/3783">New Game</a> | <a href="https://t.me/AllYonoRummyCode/138">Total Game</a> | <a href="https://t.me/YonoGamingHeadAIBot">AI Bot</a> | <a href="https://t.me/spin_crush_bot">Promo Bot</a> | <a href="https://www.fastyonoapp.online/">Master App</a>`
     );
 }
 
@@ -275,7 +271,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (Fixed with CustomFile for proper photo preview)
+// SEND TO CHANNEL
 // ============================================================
 
 async function sendFinalPost(
