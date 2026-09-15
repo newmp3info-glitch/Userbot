@@ -113,10 +113,7 @@ const GAME_LINKS = {
 // ============================================================
 
 function normalizeUsername(value) {
-    return String(value || "")
-        .replace(/^@/, "")
-        .trim()
-        .toLowerCase();
+    return String(value || "").replace(/^@/, "").trim().toLowerCase();
 }
 
 function normalizeGameName(value) {
@@ -137,7 +134,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// ROBUST GAME NAME DETECTION
+// GAME NAME DETECTION
 // ============================================================
 
 function extractGameName(rawText) {
@@ -145,7 +142,6 @@ function extractGameName(rawText) {
 
     const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
     
-    // Check first few lines for game name before "New PromoCode" or similar keywords
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
             let cleanLine = line.replace(/new\s*promocode|promocode|claim/gi, "").trim();
@@ -168,33 +164,42 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// ROBUST PROMO CODE DETECTION (Keeps full domain/code)
+// SECURE PROMO CODE DETECTION (Strips Emojis & Keeps Full Code)
 // ============================================================
 
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
-    // Matches patterns like "Claim >> spingoldvipagent.net" or "Claim: code"
-    const match = rawText.match(/claim\s*(?:➜|➔|→|>>|:|-)\s*([^\s\r\n]+)/i);
-    if (match && match[1]) {
-        return match[1].trim();
-    }
-
     const lines = rawText.split('\n');
     for (const line of lines) {
-        if (/claim/i.test(line) && (line.includes('>>') || line.includes('➜') || line.includes('→') || line.includes(':'))) {
+        if (/claim|code|promo/i.test(line)) {
             const parts = line.split(/>>|➜|➔|→|:/);
-            if (parts[1] && parts[1].trim().length > 0) {
-                return parts[1].trim().split(/\s+/)[0];
+            if (parts.length > 1) {
+                let candidate = parts.slice(1).join(':').trim();
+                // Remove any emojis (like 👇, 👉, etc.) completely
+                candidate = candidate.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
+                
+                const tokens = candidate.split(/\s+/);
+                for (const token of tokens) {
+                    if (token.length >= 3) {
+                        return token.trim();
+                    }
+                }
             }
         }
+    }
+
+    const match = rawText.match(/(?:claim|code)\s*(?:➜|➔|→|>>|:|-)?\s*([A-Za-z0-9._-]+)/i);
+    if (match && match[1]) {
+        let code = match[1].replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
+        if (code.length >= 3) return code;
     }
 
     return null;
 }
 
 // ============================================================
-// SMART GAME LINK FINDER
+// SAFE GAME LINK FINDER (Prioritizes Longest Match)
 // ============================================================
 
 function findGameLink(gameName) {
@@ -204,16 +209,18 @@ function findGameLink(gameName) {
         return GAME_LINKS[normalized];
     }
 
-    // Partial/Flexible matching
-    for (const [key, url] of Object.entries(GAME_LINKS)) {
+    // Sort keys by length descending to match longest/most specific names first
+    const sortedKeys = Object.keys(GAME_LINKS).sort((a, b) => b.length - a.length);
+
+    for (const key of sortedKeys) {
         const normKey = normalizeGameName(key);
         if (normalized.includes(normKey) || normKey.includes(normalized)) {
-            return url;
+            return GAME_LINKS[key];
         }
     }
 
-    // Default fallback link
-    return "https://yonorummyaa.com/?code=VIPQSYFW1U7&t=1747967855";
+    // Fallback to the first available link in your list (Never external)
+    return Object.values(GAME_LINKS)[0];
 }
 
 // ============================================================
@@ -445,7 +452,7 @@ async function main() {
                 console.log(`🎮 Game: ${gameName}`);
                 console.log(`🎟️ Promo Code: ${promoCode}`);
 
-                // Gets your personal referral link from your list
+                // Gets your personal referral link from your own GAME_LINKS list
                 const gameLink = findGameLink(gameName);
                 console.log(`🔗 Personal Referral Link Matched Successfully`);
 
