@@ -9,6 +9,7 @@ const http = require("http");
 
 const apiId = parseInt(process.env.API_ID, 10);
 const apiHash = process.env.API_HASH || "";
+
 const stringSession = new StringSession(
     process.env.SESSION_STRING || ""
 );
@@ -20,7 +21,7 @@ const TWO_FA_PASSWORD = process.env.TWO_FA_PASSWORD || "";
 const BOT_TOKEN = process.env.BOT_TOKEN || "";
 
 // ============================================================
-// GITHUB
+// GITHUB IMAGE SETTINGS
 // ============================================================
 
 const GITHUB_USER = "newmp3info-glitch";
@@ -49,53 +50,48 @@ const DESTINATION_CHANNELS = [
 ];
 
 // ============================================================
-// FIXED 5 BUTTONS
+// FIXED BUTTONS
 //
-// এখানে শুধু YOUR_LINK_1 থেকে YOUR_LINK_5-এর জায়গায়
-// আপনার নিজের 5টি link বসাবেন।
+// Telegram Bot API inline keyboard supports text + url.
+// "style" field is NOT supported by Telegram Bot API,
+// so it has been removed.
 //
-// Button layout:
+// Layout:
 //
-// Row 1 = 2 Blue
-// Row 2 = 2 Green
-// Row 3 = 1 Blue
+// Row 1 = 2 buttons
+// Row 2 = 2 buttons
+// Row 3 = 1 button
 //
-// এই buttonগুলো Source Channel থেকে নেওয়া হবে না।
-// প্রতিটি নতুন post-এ এই একই 5টি button থাকবে.
+// These buttons are NOT copied from source channel.
 // ============================================================
 
 const FIXED_BUTTONS = [
     [
         {
             text: "🎰 New Game 45",
-            url: "https://t.me/VipYonoFreeCode/3783",
-            style: "primary"
+            url: "https://t.me/VipYonoFreeCode/3783"
         },
         {
             text: "🎰 Total Game 70",
-            url: "https://t.me/AllYonoRummyCode/138",
-            style: "primary"
+            url: "https://t.me/AllYonoRummyCode/138"
         }
     ],
 
     [
         {
             text: "🤖 Yono AI Bot 🤖",
-            url: "https://t.me/YonoGamingHeadAIBot",
-            style: "success"
+            url: "https://t.me/YonoGamingHeadAIBot"
         },
         {
             text: "🤖 Promo Code Bot 🤖",
-            url: "https://t.me/spin_crush_bot",
-            style: "success"
+            url: "https://t.me/spin_crush_bot"
         }
     ],
 
     [
         {
             text: "🔥 Yono Master App 🔥",
-            url: "https://www.fastyonoapp.online/",
-            style: "primary"
+            url: "https://www.fastyonoapp.online/"
         }
     ]
 ];
@@ -185,6 +181,29 @@ function normalizeGameName(value) {
         .trim();
 }
 
+// ============================================================
+// REMOVE TELEGRAM HTML
+// ============================================================
+
+function stripHtml(value) {
+    return String(value || "")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+// ============================================================
+// ESCAPE HTML
+// ============================================================
+
 function escapeHtml(value) {
     return String(value || "")
         .replace(/&/g, "&amp;")
@@ -194,32 +213,79 @@ function escapeHtml(value) {
 }
 
 // ============================================================
+// CLEAN GAME NAME
+// ============================================================
+
+function cleanGameName(value) {
+    return String(value || "")
+        .replace(/[➜➔→]/g, " ")
+        .replace(/^[^\p{L}\p{N}]+/u, "")
+        .replace(/[^\p{L}\p{N}]+$/u, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+// ============================================================
 // GAME NAME DETECTION
+//
+// First checks known GAME_LINKS.
+// This is more reliable than depending only on regex.
 // ============================================================
 
 function extractGameName(rawText) {
-    if (!rawText) return null;
-
-    let match = rawText.match(
-        /(?im)^\s*(.*?)\s+New\s+(?:App\s*[➜➔→>-]+\s*)?(?:New\s+)?Promo\s*Code\b/
-    );
-
-    if (match && match[1]) {
-        return match[1]
-            .replace(/^[^\p{L}\p{N}]+/u, "")
-            .replace(/[^\p{L}\p{N}]+$/u, "")
-            .trim();
+    if (!rawText) {
+        return null;
     }
 
-    match = rawText.match(
-        /(?im)^\s*(.*?)\s+New\s+App\b/
+    const plainText = stripHtml(rawText);
+
+    const normalizedText =
+        normalizeGameName(plainText);
+
+    // --------------------------------------------------------
+    // FIRST: CHECK ALL KNOWN GAME NAMES
+    // --------------------------------------------------------
+
+    const gameNames =
+        Object.keys(GAME_LINKS)
+            .sort(
+                (a, b) =>
+                    normalizeGameName(b).length -
+                    normalizeGameName(a).length
+            );
+
+    for (const gameName of gameNames) {
+
+        const normalizedGame =
+            normalizeGameName(gameName);
+
+        if (
+            normalizedText.includes(
+                normalizedGame
+            )
+        ) {
+            return gameName;
+        }
+    }
+
+    // --------------------------------------------------------
+    // FALLBACK REGEX
+    // --------------------------------------------------------
+
+    let match = plainText.match(
+        /^\s*(.*?)\s*(?:➜|➔|→|>|-)?\s*New\s+(?:App\s*)?(?:New\s+)?Promo\s*Code\b/im
     );
 
     if (match && match[1]) {
-        return match[1]
-            .replace(/^[^\p{L}\p{N}]+/u, "")
-            .replace(/[^\p{L}\p{N}]+$/u, "")
-            .trim();
+        return cleanGameName(match[1]);
+    }
+
+    match = plainText.match(
+        /^\s*(.*?)\s*(?:➜|➔|→|>|-)?\s*New\s+App\b/im
+    );
+
+    if (match && match[1]) {
+        return cleanGameName(match[1]);
     }
 
     return null;
@@ -230,18 +296,34 @@ function extractGameName(rawText) {
 // ============================================================
 
 function extractPromoCode(rawText) {
-    if (!rawText) return null;
+
+    if (!rawText) {
+        return null;
+    }
+
+    const plainText =
+        stripHtml(rawText);
 
     const patterns = [
+
         /PROMO\s*CODE\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
 
-        /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i
+        /PROMO\s*CODE\s+([A-Za-z0-9][A-Za-z0-9._-]*)/i,
+
+        /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
+
+        /PROMO\s*CODE[\s:=-]+([A-Za-z0-9][A-Za-z0-9._-]*)/i
     ];
 
     for (const pattern of patterns) {
-        const match = rawText.match(pattern);
 
-        if (match && match[1]) {
+        const match =
+            plainText.match(pattern);
+
+        if (
+            match &&
+            match[1]
+        ) {
             return match[1].trim();
         }
     }
@@ -250,18 +332,33 @@ function extractPromoCode(rawText) {
 }
 
 // ============================================================
-// GAME LINK
+// FIND GAME LINK
 // ============================================================
 
 function findGameLink(gameName) {
-    const normalized = normalizeGameName(gameName);
 
+    if (!gameName) {
+        return null;
+    }
+
+    const normalized =
+        normalizeGameName(gameName);
+
+    // Direct match
     if (GAME_LINKS[normalized]) {
         return GAME_LINKS[normalized];
     }
 
-    for (const [key, url] of Object.entries(GAME_LINKS)) {
-        if (normalizeGameName(key) === normalized) {
+    // Safe fallback
+    for (
+        const [key, url]
+        of Object.entries(GAME_LINKS)
+    ) {
+
+        if (
+            normalizeGameName(key) ===
+            normalized
+        ) {
             return url;
         }
     }
@@ -270,52 +367,89 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// IMAGE
+// IMAGE URL
 // ============================================================
 
 function getImageUrl(gameName) {
-    const normalized = normalizeGameName(gameName);
+
+    const normalized =
+        normalizeGameName(gameName);
 
     const imageFileName =
-        normalized.replace(/\s+/g, "-") + ".jpg";
+        normalized
+            .replace(/\s+/g, "-") +
+        ".jpg";
 
     return (
-        `https://raw.githubusercontent.com/` +
+        "https://raw.githubusercontent.com/" +
         `${GITHUB_USER}/${REPO_NAME}/` +
         `${GITHUB_BRANCH}/${imageFileName}`
     );
 }
 
 // ============================================================
-// CHECK FIXED BUTTONS
+// VALIDATE FIXED BUTTONS
 // ============================================================
 
 function validateFixedButtons() {
-    for (const row of FIXED_BUTTONS) {
-        for (const button of row) {
-            if (!button.text || !button.url) {
+
+    if (
+        !Array.isArray(FIXED_BUTTONS) ||
+        FIXED_BUTTONS.length === 0
+    ) {
+        throw new Error(
+            "FIXED_BUTTONS empty."
+        );
+    }
+
+    let buttonCount = 0;
+
+    for (
+        const row
+        of FIXED_BUTTONS
+    ) {
+
+        if (
+            !Array.isArray(row) ||
+            row.length === 0
+        ) {
+            throw new Error(
+                "একটি button row খালি আছে।"
+            );
+        }
+
+        for (
+            const button
+            of row
+        ) {
+
+            if (
+                !button.text ||
+                !button.url
+            ) {
                 throw new Error(
                     "একটি Fixed Button-এর text অথবা URL খালি আছে।"
                 );
             }
 
             if (
-                button.url.startsWith("YOUR_LINK_")
+                !/^https?:\/\//i.test(
+                    button.url
+                )
             ) {
                 throw new Error(
-                    `এই button-এর link এখনও বসানো হয়নি: ${button.text}`
+                    `Invalid button URL: ${button.url}`
                 );
             }
 
-            if (
-                !["primary", "success", "danger"]
-                    .includes(button.style)
-            ) {
-                throw new Error(
-                    `Invalid button style: ${button.style}`
-                );
-            }
+            buttonCount++;
         }
+    }
+
+    if (buttonCount !== 5) {
+        throw new Error(
+            `Expected 5 fixed buttons, found ${buttonCount}.`
+        );
     }
 }
 
@@ -323,29 +457,49 @@ function validateFixedButtons() {
 // TELEGRAM BOT API
 // ============================================================
 
-async function botApi(method, payload) {
+async function botApi(
+    method,
+    payload
+) {
+
     if (!BOT_TOKEN) {
         throw new Error(
             "BOT_TOKEN Render Environment Variable-এ নেই।"
         );
     }
 
-    const response = await fetch(
-        `https://api.telegram.org/bot${BOT_TOKEN}/${method}`,
-        {
-            method: "POST",
+    const response =
+        await fetch(
+            `https://api.telegram.org/bot${BOT_TOKEN}/${method}`,
+            {
+                method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
 
-            body: JSON.stringify(payload)
-        }
-    );
+                body:
+                    JSON.stringify(payload)
+            }
+        );
 
-    const data = await response.json();
+    let data;
 
-    if (!data.ok) {
+    try {
+
+        data =
+            await response.json();
+
+    } catch (error) {
+
+        throw new Error(
+            `Telegram API invalid response. HTTP ${response.status}`
+        );
+    }
+
+    if (!response.ok || !data.ok) {
+
         throw new Error(
             data.description ||
             `Telegram API error: ${method}`
@@ -364,27 +518,37 @@ async function sendFinalPost(
     imageUrl,
     caption
 ) {
+
+    const username =
+        normalizeUsername(
+            targetChat
+        );
+
     return await botApi(
         "sendPhoto",
         {
             chat_id:
-                `@${normalizeUsername(targetChat)}`,
+                `@${username}`,
 
-            photo: imageUrl,
+            photo:
+                imageUrl,
 
-            caption: caption,
+            caption:
+                caption,
 
-            parse_mode: "HTML",
+            parse_mode:
+                "HTML",
 
             reply_markup: {
-                inline_keyboard: FIXED_BUTTONS
+                inline_keyboard:
+                    FIXED_BUTTONS
             }
         }
     );
 }
 
 // ============================================================
-// TEMPLATE
+// BUILD FINAL CAPTION
 // ============================================================
 
 function buildCaption(
@@ -392,6 +556,7 @@ function buildCaption(
     promoCode,
     gameLink
 ) {
+
     const safeGameName =
         escapeHtml(gameName);
 
@@ -399,6 +564,7 @@ function buildCaption(
         escapeHtml(promoCode);
 
     return (
+
         `<b>${safeGameName} ➞ New promo code fast claim now!!</b> 💰\n\n` +
 
         `🎟️ <b>PROMO CODE ➜</b> ` +
@@ -409,6 +575,7 @@ function buildCaption(
         `</blockquote>\n\n` +
 
         `🎰 <b>${safeGameName.toUpperCase()} LINK</b> 👉 ` +
+
         `<a href="${gameLink}">` +
         `<b>Download Now</b>` +
         `</a> 📱\n\n` +
@@ -425,29 +592,128 @@ function buildCaption(
 // DUPLICATE PROTECTION
 // ============================================================
 
-const processedMessages = new Set();
+const processedMessages =
+    new Set();
 
-function isAlreadyProcessed(messageId) {
+function isAlreadyProcessed(
+    messageId
+) {
+
     if (!messageId) {
         return false;
     }
 
-    const id = String(messageId);
+    const id =
+        String(messageId);
 
-    if (processedMessages.has(id)) {
+    if (
+        processedMessages.has(id)
+    ) {
         return true;
     }
 
     processedMessages.add(id);
 
-    if (processedMessages.size > 1000) {
-        const first =
-            processedMessages.values().next().value;
+    if (
+        processedMessages.size >
+        1000
+    ) {
 
-        processedMessages.delete(first);
+        const first =
+            processedMessages
+                .values()
+                .next()
+                .value;
+
+        processedMessages.delete(
+            first
+        );
     }
 
     return false;
+}
+
+// ============================================================
+// SLEEP
+// ============================================================
+
+function sleep(ms) {
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+}
+
+// ============================================================
+// SEND TO ALL DESTINATIONS
+// ============================================================
+
+async function sendToAllChannels(
+    imageUrl,
+    caption
+) {
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (
+        const targetChat
+        of DESTINATION_CHANNELS
+    ) {
+
+        try {
+
+            console.log(
+                `📤 Sending → @${targetChat}`
+            );
+
+            await sendFinalPost(
+                targetChat,
+                imageUrl,
+                caption
+            );
+
+            successCount++;
+
+            console.log(
+                `✅ Sent → @${targetChat}`
+            );
+
+        } catch (error) {
+
+            failedCount++;
+
+            console.error(
+                `❌ Failed → @${targetChat}`
+            );
+
+            console.error(
+                `   Reason: ${error.message}`
+            );
+        }
+
+        // Small delay
+        await sleep(500);
+    }
+
+    console.log(
+        "--------------------------------------------"
+    );
+
+    console.log(
+        `📊 Success: ${successCount}/${DESTINATION_CHANNELS.length}`
+    );
+
+    console.log(
+        `📊 Failed: ${failedCount}/${DESTINATION_CHANNELS.length}`
+    );
+
+    console.log(
+        "--------------------------------------------"
+    );
 }
 
 // ============================================================
@@ -456,19 +722,47 @@ function isAlreadyProcessed(messageId) {
 
 async function main() {
 
-    if (!apiId || !apiHash) {
+    // --------------------------------------------------------
+    // ENVIRONMENT CHECK
+    // --------------------------------------------------------
+
+    if (
+        !apiId ||
+        Number.isNaN(apiId)
+    ) {
+
         throw new Error(
-            "API_ID অথবা API_HASH পাওয়া যায়নি।"
+            "API_ID পাওয়া যায়নি অথবা invalid."
+        );
+    }
+
+    if (!apiHash) {
+
+        throw new Error(
+            "API_HASH পাওয়া যায়নি."
         );
     }
 
     if (!BOT_TOKEN) {
+
         throw new Error(
             "BOT_TOKEN পাওয়া যায়নি। Render Environment Variables-এ BOT_TOKEN দিন।"
         );
     }
 
+    // --------------------------------------------------------
+    // BUTTON CHECK
+    // --------------------------------------------------------
+
     validateFixedButtons();
+
+    console.log(
+        "✅ Fixed buttons validated."
+    );
+
+    // --------------------------------------------------------
+    // CREATE CLIENT
+    // --------------------------------------------------------
 
     const client =
         new TelegramClient(
@@ -485,23 +779,32 @@ async function main() {
         "🔄 Connecting Telegram Userbot..."
     );
 
+    // --------------------------------------------------------
+    // TELEGRAM LOGIN
+    // --------------------------------------------------------
+
     await client.start({
 
         phoneNumber:
-            async () => PHONE_NUMBER,
+            async () =>
+                PHONE_NUMBER,
 
         phoneCode:
-            async () => PHONE_CODE,
+            async () =>
+                PHONE_CODE,
 
         password:
-            async () => TWO_FA_PASSWORD,
+            async () =>
+                TWO_FA_PASSWORD,
 
         onError:
-            (err) =>
+            (err) => {
+
                 console.error(
-                    "Telegram Error:",
+                    "Telegram Login Error:",
                     err.message
-                )
+                );
+            }
     });
 
     console.log(
@@ -510,11 +813,6 @@ async function main() {
 
     console.log(
         "🚀 USERBOT CONNECTED SUCCESSFULLY"
-    );
-
-    console.log(
-        "SESSION_STRING:",
-        client.session.save()
     );
 
     console.log(
@@ -527,6 +825,22 @@ async function main() {
 
     console.log(
         "🔘 Fixed buttons: 5"
+    );
+
+    console.log(
+        "================================================"
+    );
+
+    // --------------------------------------------------------
+    // SESSION STRING
+    // --------------------------------------------------------
+
+    console.log(
+        "SESSION_STRING:"
+    );
+
+    console.log(
+        client.session.save()
     );
 
     console.log(
@@ -550,9 +864,9 @@ async function main() {
 
             try {
 
-                // --------------------------------------------
-                // SOURCE CHAT
-                // --------------------------------------------
+                // ------------------------------------------------
+                // GET CHAT
+                // ------------------------------------------------
 
                 const chat =
                     await message.getChat();
@@ -571,6 +885,10 @@ async function main() {
                         SOURCE_CHANNEL
                     );
 
+                // ------------------------------------------------
+                // SOURCE CHECK
+                // ------------------------------------------------
+
                 if (
                     currentUsername !==
                     sourceUsername
@@ -578,21 +896,26 @@ async function main() {
                     return;
                 }
 
-                // --------------------------------------------
+                // ------------------------------------------------
                 // DUPLICATE CHECK
-                // --------------------------------------------
+                // ------------------------------------------------
 
                 if (
                     isAlreadyProcessed(
                         message.id
                     )
                 ) {
+
+                    console.log(
+                        `⏭️ Duplicate message ignored: ${message.id}`
+                    );
+
                     return;
                 }
 
-                // --------------------------------------------
-                // TEXT
-                // --------------------------------------------
+                // ------------------------------------------------
+                // GET MESSAGE TEXT
+                // ------------------------------------------------
 
                 const rawText =
                     message.message ||
@@ -600,21 +923,34 @@ async function main() {
                     message.caption ||
                     "";
 
-                if (!rawText.trim()) {
+                if (
+                    !rawText ||
+                    !rawText.trim()
+                ) {
+
                     console.log(
                         "⚠️ Source post has no text."
                     );
+
                     return;
                 }
 
                 console.log("");
                 console.log(
+                    "============================================"
+                );
+
+                console.log(
                     "📩 NEW PROMO POST DETECTED"
                 );
 
-                // --------------------------------------------
-                // GAME
-                // --------------------------------------------
+                console.log(
+                    `🆔 Message ID: ${message.id}`
+                );
+
+                // ------------------------------------------------
+                // GAME NAME
+                // ------------------------------------------------
 
                 const gameName =
                     extractGameName(
@@ -628,7 +964,13 @@ async function main() {
                     );
 
                     console.log(
-                        rawText.substring(
+                        "TEXT:"
+                    );
+
+                    console.log(
+                        stripHtml(
+                            rawText
+                        ).substring(
                             0,
                             500
                         )
@@ -637,9 +979,13 @@ async function main() {
                     return;
                 }
 
-                // --------------------------------------------
+                console.log(
+                    `🎮 Game: ${gameName}`
+                );
+
+                // ------------------------------------------------
                 // PROMO CODE
-                // --------------------------------------------
+                // ------------------------------------------------
 
                 const promoCode =
                     extractPromoCode(
@@ -652,20 +998,29 @@ async function main() {
                         "❌ Promo code not detected."
                     );
 
+                    console.log(
+                        "TEXT:"
+                    );
+
+                    console.log(
+                        stripHtml(
+                            rawText
+                        ).substring(
+                            0,
+                            500
+                        )
+                    );
+
                     return;
                 }
-
-                console.log(
-                    `🎮 Game: ${gameName}`
-                );
 
                 console.log(
                     `🎟️ Promo: ${promoCode}`
                 );
 
-                // --------------------------------------------
+                // ------------------------------------------------
                 // GAME LINK
-                // --------------------------------------------
+                // ------------------------------------------------
 
                 const gameLink =
                     findGameLink(
@@ -675,15 +1030,19 @@ async function main() {
                 if (!gameLink) {
 
                     console.log(
-                        `❌ GAME_LINKS-এ ${gameName} পাওয়া যায়নি।`
+                        `❌ GAME_LINKS-এ "${gameName}" পাওয়া যায়নি।`
                     );
 
                     return;
                 }
 
-                // --------------------------------------------
+                console.log(
+                    `🔗 Game Link: ${gameLink}`
+                );
+
+                // ------------------------------------------------
                 // IMAGE
-                // --------------------------------------------
+                // ------------------------------------------------
 
                 const imageUrl =
                     getImageUrl(
@@ -694,9 +1053,9 @@ async function main() {
                     `🖼️ Image: ${imageUrl}`
                 );
 
-                // --------------------------------------------
-                // CAPTION
-                // --------------------------------------------
+                // ------------------------------------------------
+                // BUILD CAPTION
+                // ------------------------------------------------
 
                 const formattedText =
                     buildCaption(
@@ -705,82 +1064,78 @@ async function main() {
                         gameLink
                     );
 
-                // --------------------------------------------
+                console.log(
+                    "📝 Caption created successfully."
+                );
+
+                // ------------------------------------------------
                 // SEND TO 8 CHANNELS
-                // --------------------------------------------
+                // ------------------------------------------------
 
-                for (
-                    const targetChat
-                    of DESTINATION_CHANNELS
-                ) {
-
-                    try {
-
-                        console.log(
-                            `📤 Sending → @${targetChat}`
-                        );
-
-                        await sendFinalPost(
-                            targetChat,
-                            imageUrl,
-                            formattedText
-                        );
-
-                        console.log(
-                            `✅ Sent → @${targetChat}`
-                        );
-
-                        // Small delay
-                        await new Promise(
-                            resolve =>
-                                setTimeout(
-                                    resolve,
-                                    500
-                                )
-                        );
-
-                    } catch (error) {
-
-                        console.error(
-                            `❌ @${targetChat}:`,
-                            error.message
-                        );
-                    }
-                }
+                await sendToAllChannels(
+                    imageUrl,
+                    formattedText
+                );
 
                 console.log(
                     "✅ ALL DESTINATION CHANNELS PROCESSED"
                 );
 
+                console.log(
+                    "============================================"
+                );
+
             } catch (error) {
 
                 console.error(
-                    "❌ MESSAGE ERROR:",
+                    "❌ MESSAGE ERROR:"
+                );
+
+                console.error(
                     error.message
                 );
+
+                if (error.stack) {
+                    console.error(
+                        error.stack
+                    );
+                }
             }
         },
 
         new NewMessage({})
     );
+
+    console.log(
+        "👂 Listening for new messages..."
+    );
 }
 
 // ============================================================
-// START
+// START APPLICATION
 // ============================================================
 
 main().catch(
     (error) => {
 
         console.error(
-            "🔥 MAIN ERROR:",
-            error
+            "🔥 MAIN ERROR:"
         );
+
+        console.error(
+            error.message
+        );
+
+        if (error.stack) {
+            console.error(
+                error.stack
+            );
+        }
     }
 );
 
 // ============================================================
-// RENDER SERVER
+// RENDER WEB SERVER
 // ============================================================
 
 const server =
