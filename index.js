@@ -17,7 +17,7 @@ const SESSION_STRING = process.env.SESSION_STRING || "";
 
 const GITHUB_USER = "newmp3info-glitch";
 const REPO_NAME = "Userbot";
-const GITHUB_BRANCH = "main"; // প্রধান ব্রাঞ্চ
+const GITHUB_BRANCH = "main";
 
 // ============================================================
 // SOURCE CHANNEL
@@ -305,7 +305,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (main এবং master উভয় ব্রাঞ্চ অটো-চেক করার ব্যবস্থা)
+// SEND TO CHANNEL (Auto branch check & image fetch)
 // ============================================================
 
 async function sendFinalPost(
@@ -416,11 +416,12 @@ async function main() {
     console.log("==============================================");
 
     // ========================================================
-    // CHECK SOURCE
+    // CHECK SOURCE & GET ID
     // ========================================================
 
     const sourceEntity = await client.getEntity(SOURCE_CHANNEL);
-    console.log(`✅ Source channel found: ${SOURCE_CHANNEL}`);
+    const sourceEntityId = sourceEntity.id ? String(sourceEntity.id).replace("-100", "") : "";
+    console.log(`✅ Source channel found: ${SOURCE_CHANNEL} (ID: ${sourceEntityId})`);
 
     // ========================================================
     // CHECK DESTINATIONS
@@ -457,19 +458,20 @@ async function main() {
             try {
 
                 // --------------------------------------------
-                // GET CHAT
+                // GET CHAT & ID / USERNAME VERIFICATION
                 // --------------------------------------------
 
-                const chat = await message.getChat();
+                const chat = await message.getChat().catch(() => null);
 
-                if (!chat) {
-                    return;
-                }
-
-                const currentUsername = normalizeUsername(chat.username);
+                const chatIdStr = message.chatId ? String(message.chatId).replace("-100", "") : "";
+                const currentUsername = chat && chat.username ? normalizeUsername(chat.username) : "";
                 const sourceUsername = normalizeUsername(SOURCE_CHANNEL);
 
-                if (currentUsername !== sourceUsername) {
+                const isMatch = 
+                    (sourceEntityId && chatIdStr && chatIdStr === sourceEntityId) ||
+                    (sourceUsername && currentUsername && currentUsername === sourceUsername);
+
+                if (!isMatch) {
                     return;
                 }
 
