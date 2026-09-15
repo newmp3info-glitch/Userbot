@@ -32,12 +32,6 @@ const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 const DESTINATION_CHANNELS = [
     "@totalyonocode",
-    "@fullyonocode",
-    "@superyonocode",
-    "@LootYonoCode",
-    "@FastYonoCode",
-    "@RealYonoCode",
-    "@VipFreeYonoCode",
     "@WinRummynet"
 ];
 
