@@ -20,7 +20,7 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL (এখানে আপনার আসল চ্যানেলের সঠিক ইউজারনেম দিন)
+// SOURCE CHANNEL
 // ============================================================
 
 const SOURCE_CHANNEL = "@AllYonorummyCode";
@@ -90,10 +90,10 @@ const GAME_LINKS = {
     "jaiho win": "https://www.jaihowin5.com/?code=4J69ZG2DK5H&t=1752209730",
     "jaiho slots": "https://jahoslotsagent1.com/?code=EGPEZKXT838&t=1748230888",
     "jaiho spin": "https://jaihospin1.com/?code=7TAJN64H9LP&t=1741079885",
-    "jaiho rummy": "https://jaiho-rummy.com/?code=E74M53JS26R&t=1776974460",
+    "jaiho rummy": "https://www.jaihoclyclub.com/?code=E74ALBMPNFT&t=1779814509",
     "joy rummy": "https://joyrummy.cc/?code=J5KNNUXTNLW&t=1768444922",
     "rummy 888": "https://rummy888vip10.com/?code=EVSZMHU9AC2&t=1764567211",
-    "rummy 77": "https://rummy77a.com/?code=F3V7TB9KD5H&t=1763692367",
+    "rummy 77": "https://www.rummy77a.com/?code=F3V9E5R2BKS&t=1763692222",
     "rummy ludo": "https://ludorummy.download/?code=UWPH29LC845&t=1762829766",
     "rummy 91": "https://www.ynrummy91g.com/?code=4KT7BTMD2ZY&t=1765972799",
     "boss rummy": "https://bossrummyn.com/?code=9HFEUHFV6JD&t=1766370231",
@@ -137,9 +137,7 @@ const GAME_LINKS = {
     "dhan game": "https://www.dhanwinplay.com/?code=L2V36G8J9AR&t=1784777212",
     "win rummy": "https://www.winrummy27.com/?code=8JTZNTE666F&t=1785291927",
     "gold rummy": "https://goldrummy30.com/?code=JLXYHLPBTYR&t=1787106396",
-    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753",
-    "jaiho rummy": "https://www.jaihoclyclub.com/?code=E74ALBMPNFT&t=1779814509",
-    "rummy 77": "https://www.rummy77a.com/?code=F3V9E5R2BKS&t=1763692222"
+    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753"
 };
 
 // ============================================================
@@ -156,7 +154,7 @@ function normalizeUsername(value) {
 function normalizeGameName(value) {
     return String(value || "")
         .toLowerCase()
-        .replace(/[-_]/g, " ") // হাইফেন বা আন্ডারস্কোরকে স্পেস বানিয়ে নেবে
+        .replace(/[-_]/g, " ")
         .replace(/[^\p{L}\p{N}]+/gu, " ")
         .replace(/\s+/g, " ")
         .trim();
@@ -171,7 +169,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION (হাইফেন এবং New PromoCode সাপোর্ট সহ)
+// GAME NAME DETECTION
 // ============================================================
 
 function extractGameName(rawText) {
@@ -235,10 +233,7 @@ function findGameLink(gameName) {
 
 function getImageUrl(gameName) {
     const normalized = normalizeGameName(gameName);
-
-    const imageFileName =
-        normalized.replace(/\s+/g, "-") + ".jpg";
-
+    const imageFileName = normalized.replace(/\s+/g, "-") + ".jpg";
     return (
         `https://raw.githubusercontent.com/` +
         `${GITHUB_USER}/${REPO_NAME}/` +
@@ -324,7 +319,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL
+// SEND TO CHANNEL (আবশ্যিকভাবে ছবিসহ পাঠানোর ব্যবস্থা)
 // ============================================================
 
 async function sendFinalPost(
@@ -333,14 +328,15 @@ async function sendFinalPost(
     imageUrl,
     caption
 ) {
-    const entity = await client.getEntity(
-        targetChat
-    );
+    const entity = await client.getEntity(targetChat);
 
+    console.log(`📥 Downloading image from: ${imageUrl}`);
     const imageResponse = await fetch(imageUrl);
+    
     if (!imageResponse.ok) {
-        throw new Error(`Failed to download image from URL: ${imageResponse.statusText}`);
+        throw new Error(`Failed to download image from GitHub: ${imageUrl} (Status: ${imageResponse.statusText})`);
     }
+
     const arrayBuffer = await imageResponse.arrayBuffer();
     const imageBuffer = Buffer.from(arrayBuffer);
 
@@ -368,21 +364,15 @@ async function main() {
     console.log("==============================================");
 
     if (!API_ID) {
-        throw new Error(
-            "API_ID পাওয়া যায়নি।"
-        );
+        throw new Error("API_ID পাওয়া যায়নি।");
     }
 
     if (!API_HASH) {
-        throw new Error(
-            "API_HASH পাওয়া যায়নি।"
-        );
+        throw new Error("API_HASH পাওয়া যায়নি।");
     }
 
     if (!SESSION_STRING) {
-        throw new Error(
-            "SESSION_STRING পাওয়া যায়নি।"
-        );
+        throw new Error("SESSION_STRING পাওয়া যায়নি।");
     }
 
     const client =
@@ -402,105 +392,47 @@ async function main() {
     await client.connect();
 
     if (!await client.checkAuthorization()) {
-        throw new Error(
-            "SESSION_STRING দিয়ে Telegram authorization পাওয়া যায়নি।"
-        );
+        throw new Error("SESSION_STRING দিয়ে Telegram authorization পাওয়া যায়নি।");
     }
 
-    console.log(
-        "=============================================="
-    );
+    console.log("==============================================");
 
-    const me =
-        await client.getMe();
+    const me = await client.getMe();
 
-    console.log(
-        "✅ USERBOT CONNECTED SUCCESSFULLY"
-    );
+    console.log("✅ USERBOT CONNECTED SUCCESSFULLY");
+    console.log(`👤 User ID: ${me.id}`);
+    console.log(`👤 Username: @${me.username || "NoUsername"}`);
+    console.log("==============================================");
 
-    console.log(
-        `👤 User ID: ${me.id}`
-    );
-
-    console.log(
-        `👤 Username: @${me.username || "NoUsername"}`
-    );
-
-    console.log(
-        "=============================================="
-    );
-
-    console.log(
-        `🎯 Source: ${SOURCE_CHANNEL}`
-    );
-
-    console.log(
-        `📤 Destinations: ${DESTINATION_CHANNELS.length}`
-    );
-
-    console.log(
-        "🔘 Fixed buttons: 5"
-    );
-
-    console.log(
-        "=============================================="
-    );
+    console.log(`🎯 Source: ${SOURCE_CHANNEL}`);
+    console.log(`📤 Destinations: ${DESTINATION_CHANNELS.length}`);
+    console.log("🔘 Fixed buttons: 5");
+    console.log("==============================================");
 
     // ========================================================
     // CHECK SOURCE
     // ========================================================
 
-    const sourceEntity =
-        await client.getEntity(
-            SOURCE_CHANNEL
-        );
-
-    console.log(
-        `✅ Source channel found: ${SOURCE_CHANNEL}`
-    );
+    const sourceEntity = await client.getEntity(SOURCE_CHANNEL);
+    console.log(`✅ Source channel found: ${SOURCE_CHANNEL}`);
 
     // ========================================================
     // CHECK DESTINATIONS
     // ========================================================
 
-    for (
-        const destination
-        of DESTINATION_CHANNELS
-    ) {
+    for (const destination of DESTINATION_CHANNELS) {
         try {
-
-            await client.getEntity(
-                destination
-            );
-
-            console.log(
-                `✅ Target channel found: ${destination}`
-            );
-
+            await client.getEntity(destination);
+            console.log(`✅ Target channel found: ${destination}`);
         } catch (error) {
-
-            console.error(
-                `❌ Target channel not found: ${destination}`
-            );
-
+            console.error(`❌ Target channel not found: ${destination}`);
         }
     }
 
-    console.log(
-        "=============================================="
-    );
-
-    console.log(
-        "🟢 USERBOT IS NOW LISTENING FOR NEW POSTS..."
-    );
-
-    console.log(
-        `👀 Watching ${SOURCE_CHANNEL}`
-    );
-
-    console.log(
-        "=============================================="
-    );
+    console.log("==============================================");
+    console.log("🟢 USERBOT IS NOW LISTENING FOR NEW POSTS...");
+    console.log(`👀 Watching ${SOURCE_CHANNEL}`);
+    console.log("==============================================");
 
     // ========================================================
     // NEW MESSAGE EVENT
@@ -510,8 +442,7 @@ async function main() {
 
         async (event) => {
 
-            const message =
-                event.message;
+            const message = event.message;
 
             if (!message) {
                 return;
@@ -523,27 +454,16 @@ async function main() {
                 // GET CHAT
                 // --------------------------------------------
 
-                const chat =
-                    await message.getChat();
+                const chat = await message.getChat();
 
                 if (!chat) {
                     return;
                 }
 
-                const currentUsername =
-                    normalizeUsername(
-                        chat.username
-                    );
+                const currentUsername = normalizeUsername(chat.username);
+                const sourceUsername = normalizeUsername(SOURCE_CHANNEL);
 
-                const sourceUsername =
-                    normalizeUsername(
-                        SOURCE_CHANNEL
-                    );
-
-                if (
-                    currentUsername !==
-                    sourceUsername
-                ) {
+                if (currentUsername !== sourceUsername) {
                     return;
                 }
 
@@ -551,11 +471,7 @@ async function main() {
                 // DUPLICATE
                 // --------------------------------------------
 
-                if (
-                    isAlreadyProcessed(
-                        `${sourceUsername}_${message.id}`
-                    )
-                ) {
+                if (isAlreadyProcessed(`${sourceUsername}_${message.id}`)) {
                     return;
                 }
 
@@ -570,49 +486,24 @@ async function main() {
                     "";
 
                 if (!rawText.trim()) {
-
-                    console.log(
-                        "⚠️ Source post has no text."
-                    );
-
+                    console.log("⚠️ Source post has no text.");
                     return;
                 }
 
                 console.log("");
-                console.log(
-                    "=============================================="
-                );
-
-                console.log(
-                    "📩 NEW PROMO POST DETECTED"
-                );
-
-                console.log(
-                    `🆔 Message ID: ${message.id}`
-                );
+                console.log("==============================================");
+                console.log("📩 NEW PROMO POST DETECTED");
+                console.log(`🆔 Message ID: ${message.id}`);
 
                 // --------------------------------------------
                 // GAME NAME
                 // --------------------------------------------
 
-                const gameName =
-                    extractGameName(
-                        rawText
-                    );
+                const gameName = extractGameName(rawText);
 
                 if (!gameName) {
-
-                    console.log(
-                        "❌ Game name not detected."
-                    );
-
-                    console.log(
-                        rawText.substring(
-                            0,
-                            500
-                        )
-                    );
-
+                    console.log("❌ Game name not detected.");
+                    console.log(rawText.substring(0, 500));
                     return;
                 }
 
@@ -620,90 +511,56 @@ async function main() {
                 // PROMO CODE
                 // --------------------------------------------
 
-                const promoCode =
-                    extractPromoCode(
-                        rawText
-                    );
+                const promoCode = extractPromoCode(rawText);
 
                 if (!promoCode) {
-
-                    console.log(
-                        "❌ Promo code not detected."
-                    );
-
+                    console.log("❌ Promo code not detected.");
                     return;
                 }
 
-                console.log(
-                    `🎮 Game: ${gameName}`
-                );
-
-                console.log(
-                    `🎟️ Promo Code: ${promoCode}`
-                );
+                console.log(`🎮 Game: ${gameName}`);
+                console.log(`🎟️ Promo Code: ${promoCode}`);
 
                 // --------------------------------------------
                 // GAME LINK
                 // --------------------------------------------
 
-                const gameLink =
-                    findGameLink(
-                        gameName
-                    );
+                const gameLink = findGameLink(gameName);
 
                 if (!gameLink) {
-
-                    console.log(
-                        `❌ No matching game link for: ${gameName}`
-                    );
-
+                    console.log(`❌ No matching game link for: ${gameName}`);
                     return;
                 }
 
-                console.log(
-                    `🔗 Game Link matched successfully`
-                );
+                console.log(`🔗 Game Link matched successfully`);
 
                 // --------------------------------------------
                 // IMAGE
                 // --------------------------------------------
 
-                const imageUrl =
-                    getImageUrl(
-                        gameName
-                    );
-
-                console.log(
-                    `🖼️ Image: ${imageUrl}`
-                );
+                const imageUrl = getImageUrl(gameName);
+                console.log(`🖼️ Image URL: ${imageUrl}`);
 
                 // --------------------------------------------
                 // BUILD TEMPLATE
                 // --------------------------------------------
 
-                const formattedText =
-                    buildCaption(
-                        gameName,
-                        promoCode,
-                        gameLink
-                    );
+                const formattedText = buildCaption(
+                    gameName,
+                    promoCode,
+                    gameLink
+                );
 
                 // --------------------------------------------
-                // SEND TO ALL 8 CHANNELS
+                // SEND TO ALL 8 CHANNELS (ছবিসহ পাঠানো বাধ্যতামূলক)
                 // --------------------------------------------
 
                 let successCount = 0;
 
-                for (
-                    const targetChat
-                    of DESTINATION_CHANNELS
-                ) {
+                for (const targetChat of DESTINATION_CHANNELS) {
 
                     try {
-
-                        console.log(
-                            `📤 Sending → ${targetChat}`
-                        );
+                        console.log(`📤 Sending image post → ${targetChat}`);
 
                         await sendFinalPost(
                             client,
@@ -713,47 +570,21 @@ async function main() {
                         );
 
                         successCount++;
+                        console.log(`✅ Sent successfully → ${targetChat}`);
 
-                        console.log(
-                            `✅ Sent → ${targetChat}`
-                        );
-
-                        await new Promise(
-                            resolve =>
-                                setTimeout(
-                                    resolve,
-                                    700
-                                )
-                        );
+                        await new Promise(resolve => setTimeout(resolve, 700));
 
                     } catch (error) {
-
-                        console.error(
-                            `❌ ${targetChat}: ${error.message}`
-                        );
-
+                        console.error(`❌ ${targetChat}: ${error.message}`);
                     }
                 }
 
-                console.log(
-                    "=============================================="
-                );
-
-                console.log(
-                    `✅ POSTING FINISHED: ${successCount}/${DESTINATION_CHANNELS.length}`
-                );
-
-                console.log(
-                    "=============================================="
-                );
+                console.log("==============================================");
+                console.log(`✅ POSTING FINISHED: ${successCount}/${DESTINATION_CHANNELS.length}`);
+                console.log("==============================================");
 
             } catch (error) {
-
-                console.error(
-                    "❌ MESSAGE ERROR:",
-                    error.message
-                );
-
+                console.error("❌ MESSAGE ERROR:", error.message);
             }
 
         },
@@ -769,28 +600,14 @@ async function main() {
 
     setInterval(
         async () => {
-
             try {
-
-                if (
-                    !client.connected
-                ) {
-                    console.log(
-                        "🔄 Telegram disconnected. Reconnecting..."
-                    );
-
+                if (!client.connected) {
+                    console.log("🔄 Telegram disconnected. Reconnecting...");
                     await client.connect();
                 }
-
             } catch (error) {
-
-                console.error(
-                    "❌ Reconnect error:",
-                    error.message
-                );
-
+                console.error("❌ Reconnect error:", error.message);
             }
-
         },
         30000
     );
@@ -799,37 +616,21 @@ async function main() {
     // GRACEFUL SHUTDOWN
     // ========================================================
 
-    process.on(
-        "SIGTERM",
-        async () => {
+    process.on("SIGTERM", async () => {
+        console.log("🛑 SIGTERM received.");
+        try {
+            await client.disconnect();
+        } catch (_) {}
+        process.exit(0);
+    });
 
-            console.log(
-                "🛑 SIGTERM received."
-            );
-
-            try {
-                await client.disconnect();
-            } catch (_) {}
-
-            process.exit(0);
-        }
-    );
-
-    process.on(
-        "SIGINT",
-        async () => {
-
-            console.log(
-                "🛑 SIGINT received."
-            );
-
-            try {
-                await client.disconnect();
-            } catch (_) {}
-
-            process.exit(0);
-        }
-    );
+    process.on("SIGINT", async () => {
+        console.log("🛑 SIGINT received.");
+        try {
+            await client.disconnect();
+        } catch (_) {}
+        process.exit(0);
+    });
 }
 
 // ============================================================
@@ -838,12 +639,7 @@ async function main() {
 
 main().catch(
     error => {
-
-        console.error(
-            "🔥 MAIN ERROR:",
-            error.message
-        );
-
+        console.log("🔥 MAIN ERROR:", error.message);
         process.exit(1);
     }
 );
@@ -852,35 +648,15 @@ main().catch(
 // RENDER WEB SERVER
 // ============================================================
 
-const server =
-    http.createServer(
-        (req, res) => {
+const server = http.createServer((req, res) => {
+    res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8"
+    });
+    res.end("Telegram Promo Userbot is running!\n");
+});
 
-            res.writeHead(
-                200,
-                {
-                    "Content-Type":
-                        "text/plain; charset=utf-8"
-                }
-            );
+const PORT = Number(process.env.PORT) || 10000;
 
-            res.end(
-                "Telegram Promo Userbot is running!\n"
-            );
-        }
-    );
-
-const PORT =
-    Number(process.env.PORT) || 10000;
-
-server.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-
-        console.log(
-            `🌐 Render server running on port ${PORT}`
-        );
-
-    }
-);
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🌐 Render server running on port ${PORT}`);
+});
