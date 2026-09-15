@@ -13,7 +13,7 @@ const stringSession = new StringSession(process.env.SESSION_STRING || "");
 const GITHUB_USER = "newmp3info-glitch";
 const REPO_NAME = "Userbot";
 
-const SOURCE_CHANNEL = 'AllYonoPromoCodes';
+const SOURCE_CHANNEL = 'AllYonoPtteyooromoCodes';
 
 const DESTINATION_CHANNELS = [
     'vipyonofreecode',
