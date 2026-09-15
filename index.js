@@ -32,12 +32,6 @@ const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 const DESTINATION_CHANNELS = [
     "@totalyonocode",
-    "@fullyonocode",
-    "@superyonocode",
-    "@LootYonoCode",
-    "@FastYonoCode",
-    "@RealYonoCode",
-    "@VipFreeYonoCode",
     "@WinRummynet"
 ];
 
@@ -134,7 +128,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// FULL GAME NAME DETECTION (Preserves numbers like 213, 777)
+// PRECISE FULL GAME NAME DETECTION (Keeps hyphens and numbers like Bet-213)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -144,8 +138,8 @@ function extractGameName(rawText) {
     
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
+            // Remove the keywords and emojis, but KEEP hyphens and numbers (e.g., Bet-213)
             let cleanLine = line.replace(/new\s*promocode|promocode|claim/gi, "").trim();
-            // Strip emojis but KEEP numbers and hyphens (like Bet-213)
             cleanLine = cleanLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
             cleanLine = cleanLine.replace(/[\/\–\—\>]+/g, " ").trim();
             if (cleanLine.length > 1) {
