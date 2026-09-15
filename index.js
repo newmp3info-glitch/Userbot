@@ -104,7 +104,8 @@ const GAME_LINKS = {
     "dhan game": "https://www.dhanwinplay.com/?code=L2V36G8J9AR&t=1784777212",
     "win rummy": "https://www.winrummy27.com/?code=8JTZNTE666F&t=1785291927",
     "gold rummy": "https://goldrummy30.com/?code=JLXYHLPBTYR&t=1787106396",
-    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753"
+    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753",
+    "rummy 77": "https://www.rummy77a.com/?code=F3V9E5R2BKS&t=1763692222"
 };
 
 // ============================================================
@@ -195,7 +196,7 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// TEMPLATE WITH FIXED BOTTOM LINKS (Since Userbot can't send inline buttons)
+// TEMPLATE
 // ============================================================
 
 function buildCaption(
@@ -261,7 +262,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL
+// SEND TO CHANNEL (Fixed to send as proper photo instead of file)
 // ============================================================
 
 async function sendFinalPost(
@@ -292,10 +293,16 @@ async function sendFinalPost(
     }
 
     if (imageBuffer) {
+        // GramJS-এ ছবি হিসেবে পাঠানোর জন্য ফাইল অবজেক্টে name বা fileName দিতে হয়
+        const photoFile = {
+            source: imageBuffer,
+            name: imageFileName
+        };
+
         return await client.sendFile(
             entity,
             {
-                file: imageBuffer,
+                file: photoFile,
                 caption: caption,
                 parseMode: "html",
                 forceDocument: false
