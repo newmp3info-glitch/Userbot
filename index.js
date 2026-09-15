@@ -20,7 +20,7 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL (প্রয়োজনে এই চ্যানেলের সঠিক ইউজারনেম দিন)
+// SOURCE CHANNEL (এখানে আপনার আসল চ্যানেলের সঠিক ইউজারনেম দিন)
 // ============================================================
 
 const SOURCE_CHANNEL = "@AllYonorummyCode";
@@ -105,15 +105,15 @@ const GAME_LINKS = {
     "game rummy": "https://gamesrummy.app/?code=Q6WJ5M6UA4J&t=1758335492",
     "rumble rummy": "https://rumblerummyofficial.vip/?code=UC0E2CABAJD&t=1756696218",
     "spin winner": "https://spinwinnerfreecash2.com/?code=SDNHN67187V&t=1743101371",
-    "love rummy": "https://www.loverummy6.com/?code=AFC6FQSG7VX&t=1755829901",
+    "love rummy": "https://www.8loverummy.com/?code=AF CGCQYZQ5E&t=1757156156",
     "share slots": "https://shareslots66.com/?code=GFV2UHKQ3XL&t=1754885021",
     "maha games": "https://mahagames.store/?code=J24VEQEGY9F&t=1776974564",
     "hi rummy": "https://hirummyrefer.vip/?code=RX389XDH2V6&t=1753063336",
     "gogo rummy": "https://www.gogorummy8.com/?code=8FWMTAM8CUF&t=1743101440",
     "ind club": "https://indclubc.com/?code=34UZ2SRRL2A&t=1751337884",
-    "top rummy": "https://toprummy.cc/?code=7K9BTEX2Z7J&t=1750740391",
+    "top rummy": "https://www.toprummy.xyz/?code=7K9K1JCKCC5&t=1783792105",
     "ind rummy": "https://indrummy7.com/?code=2BA8ADDPWEJ&t=1749436463",
-    "abc rummy": "https://www.abcrummy1.com/?code=75CN7R7Y8PY&t=1743100250",
+    "abc rummy": "https://www.22abcrummy.com/?code=75C92CLAD92&t=1779814560",
     "ind slots": "https://indslots3.com/?code=EYMCJP1NA2C&t=1743100179",
     "101z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
     "spin gold": "https://spingoldagents.net/?code=HLTS5ALTUNW&t=1743100758",
@@ -127,7 +127,7 @@ const GAME_LINKS = {
     "567slots": "https://567slotsagents.net/?code=4NYT1UY68JN&t=1743099721",
     "slots spin": "https://slotsspino.com/?code=XJBWC8R516C&t=1743100644",
     "neta vip": "https://neta2.vip/?code=DR0FVH8VBKP&t=1743099907",
-    "slots winner": "https://slotswinnerf.com/?code=K4EHSWHN9C1&t=1778259858",
+    "slots winner": "https://www.slotswinnerhp.com/?code=PGVHTFC4C4K&t=1779813551",
     "inr rummy": "https://inrrummy.cc/?code=JMQESK3J5UR&t=1767494008",
     "saga slots": "https://sagaslotsw.com/?code=0QHPZS4EJXM&t=1747969670",
     "yono 777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205",
@@ -138,11 +138,7 @@ const GAME_LINKS = {
     "win rummy": "https://www.winrummy27.com/?code=8JTZNTE666F&t=1785291927",
     "gold rummy": "https://goldrummy30.com/?code=JLXYHLPBTYR&t=1787106396",
     "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753",
-    "top rummy": "https://www.toprummy.xyz/?code=7K9K1JCKCC5&t=1783792105",
-    "abc rummy": "https://www.22abcrummy.com/?code=75C92CLAD92&t=1779814560",
     "jaiho rummy": "https://www.jaihoclyclub.com/?code=E74ALBMPNFT&t=1779814509",
-    "slots winner": "https://www.slotswinnerhp.com/?code=PGVHTFC4C4K&t=1779813551",
-    "love rummy": "https://www.8loverummy.com/?code=AF CGCQYZQ5E&t=1757156156",
     "rummy 77": "https://www.rummy77a.com/?code=F3V9E5R2BKS&t=1763692222"
 };
 
@@ -160,6 +156,7 @@ function normalizeUsername(value) {
 function normalizeGameName(value) {
     return String(value || "")
         .toLowerCase()
+        .replace(/[-_]/g, " ") // হাইফেন বা আন্ডারস্কোরকে স্পেস বানিয়ে নেবে
         .replace(/[^\p{L}\p{N}]+/gu, " ")
         .replace(/\s+/g, " ")
         .trim();
@@ -174,7 +171,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION (নতুন ফরম্যাট অনুযায়ী)
+// GAME NAME DETECTION (হাইফেন এবং New PromoCode সাপোর্ট সহ)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -195,7 +192,7 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// PROMO CODE DETECTION (Claim >> এর পরের অংশ বা কোড ধরার জন্য)
+// PROMO CODE DETECTION
 // ============================================================
 
 function extractPromoCode(rawText) {
