@@ -1,21 +1,20 @@
 const { TelegramClient } = require("telegram");
-const { StoreSession } = require("telegram/sessions");
+const { StringSession } = require("telegram/sessions");
 const { NewMessage } = require("telegram/events");
 const http = require('http');
 
-// রেন্ডারের Environment Variables থেকে সংগৃহীত ডাটা
+// রেন্ডারের Environment Variables থেকে ডাটা নেওয়া
 const apiId = parseInt(process.env.API_ID);
 const apiHash = process.env.API_HASH;
-const stringSession = new StoreSession("userbot_session");
 
-// আপনার গিটহাবের ইউজারনেম এবং রিপোজিটরি নাম (ছবির জন্য)
+// স্ট্রিং সেশন ব্যবহার করা (যাতে বারবার ওটিপি না লাগে)
+const stringSession = new StringSession(process.env.SESSION_STRING || "");
+
 const GITHUB_USER = "newmp3info-glitch";
 const REPO_NAME = "Userbot";
 
-// সোর্স চ্যানেল যেখান থেকে ইউজার বট পোস্ট পড়বে
-const SOURCE_CHANNEL = 'AllYonoPromoCodeyxvfdks';
+const SOURCE_CHANNEL = 'AllYonoPromoCodes';
 
-// আপনার ১০টি টার্গেট চ্যানেল
 const DESTINATION_CHANNELS = [
     'vipyonofreecode',
     'allyonorummycode',
@@ -29,7 +28,6 @@ const DESTINATION_CHANNELS = [
     'WinRummynet'
 ];
 
-// ৬০টি গেমের সঠিক লিংক ম্যাপিং
 const GAME_LINKS = {
     "yono rummy": "https://yonorummyaa.com/?code=VIPQSYFW1U7&t=1747967855",
     "yono slots": "https://www.yonoslot.com/?code=PJBAVZSMQKB&t=1743101854",
@@ -100,8 +98,12 @@ async function main() {
     await client.start({
         phoneNumber: async () => process.env.PHONE_NUMBER,
         phoneCode: async () => process.env.PHONE_CODE,
+        password: async () => process.env.TWO_FA_PASSWORD, // যদি টু-স্টেপ ভেরিফিকেশন থাকে
         onError: (err) => console.log(err),
     });
+
+    // প্রথমবার সফলভাবে লগইন হলে সেশন স্ট্রিং প্রিন্ট করবে (যা পরে রেন্ডারে বসাতে হবে)
+    console.log("SESSION_STRING:", client.session.save());
 
     console.log("🚀 Userbot is successfully running and connected!");
 
@@ -121,8 +123,8 @@ async function main() {
                     return; 
                 }
 
-                let gameName = gameNameMatch[1].trim();
-                let promoCodeText = promoMatch[1].trim();
+                let gameName = gameNameMatch.trim();
+                let promoCodeText = promoMatch.trim();
 
                 if (!promoCodeText) {
                     return;
@@ -130,18 +132,15 @@ async function main() {
 
                 let cleanGameKey = gameName.toLowerCase();
 
-                // লিস্টের বাইরের গেম হলে ফিল্টার করে বাদ দিয়ে দেওয়া
                 if (!GAME_LINKS[cleanGameKey]) {
                     return; 
                 }
 
                 let userCustomLink = GAME_LINKS[cleanGameKey];
 
-                // গেমের নাম অনুযায়ী গিটহাবের হোমপেজের ছবি ম্যাচ করা
                 let imageFileName = cleanGameKey.replace(/\s+/g, '-') + '.jpg';
                 let githubImageUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/${imageFileName}`;
 
-                // আপনার কাঙ্ক্ষিত টেমপ্লেট ডিজাইন
                 let formattedText = `<b>${gameName} ➔ New promo code fast claim now!!</b>\n\n` +
                     `🎁 <b>PROMO CODE ➔</b> <code>${promoCodeText}</code>\n\n` +
                     `🎁 <b>New Users 🎉 SignUp Bonus Upto ₹49 - ₹199</b> <b>"</b>\n\n` +
