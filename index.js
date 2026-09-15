@@ -104,8 +104,7 @@ const GAME_LINKS = {
     "dhan game": "https://www.dhanwinplay.com/?code=L2V36G8J9AR&t=1784777212",
     "win rummy": "https://www.winrummy27.com/?code=8JTZNTE666F&t=1785291927",
     "gold rummy": "https://goldrummy30.com/?code=JLXYHLPBTYR&t=1787106396",
-    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753",
-    "rummy 77": "https://www.rummy77a.com/?code=F3V9E5R2BKS&t=1763692222"
+    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753"
 };
 
 // ============================================================
@@ -137,46 +136,64 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION
+// FLEXIBLE GAME NAME DETECTION
 // ============================================================
 
 function extractGameName(rawText) {
     if (!rawText) return null;
 
-    let match = rawText.match(
-        /^\s*(.*?)\s+New\s+PromoCode\b/im
-    );
+    // Remove emojis and clean text
+    const cleanText = rawText.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
+    const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
 
-    if (match && match[1]) {
-        return match[1]
-            .replace(/^[^\p{L}\p{N}]+/u, "")
-            .replace(/[^\p{L}\p{N}]+$/u, "")
-            .trim();
+    // Look for lines containing promo/code or take the first valid line
+    for (const line of lines) {
+        if (/promo|code|new/i.test(line)) {
+            let parts = line.split(/new|promo|code/i);
+            if (parts[0] && parts[0].trim().length > 1) {
+                return parts[0].trim();
+            }
+        }
+    }
+
+    if (lines.length > 0) {
+        let candidate = lines[0].replace(/new.*$/i, '').trim();
+        if (candidate.length > 1 && candidate.length < 35) {
+            return candidate;
+        }
     }
 
     return null;
 }
 
 // ============================================================
-// PROMO CODE DETECTION
+// FLEXIBLE PROMO CODE DETECTION
 // ============================================================
 
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
-    const match = rawText.match(
-        /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([^\r\n]+)/i
-    );
-
+    // Match after keywords or symbols like ➜, ➔, ->
+    const match = rawText.match(/(?:CLAIM|Code|PROMO\s*CODE)\s*(?:➜|➔|→|>>|:|-)?\s*([A-Za-z0-9_-]+)/i);
     if (match && match[1]) {
         return match[1].trim();
+    }
+
+    const lines = rawText.split('\n');
+    for (const line of lines) {
+        if (line.includes('➜') || line.includes('➔') || line.includes('→') || line.includes(':')) {
+            const parts = line.split(/➜|➔|→|>>|:/);
+            if (parts[1] && parts[1].trim().length >= 3) {
+                return parts[1].trim().split(' ')[0];
+            }
+        }
     }
 
     return null;
 }
 
 // ============================================================
-// GAME LINK
+// GAME LINK FINDER
 // ============================================================
 
 function findGameLink(gameName) {
@@ -187,12 +204,13 @@ function findGameLink(gameName) {
     }
 
     for (const [key, url] of Object.entries(GAME_LINKS)) {
-        if (normalizeGameName(key) === normalized) {
+        if (normalizeGameName(key) === normalized || normalized.includes(normalizeGameName(key)) || normalizeGameName(key).includes(normalized)) {
             return url;
         }
     }
 
-    return null;
+    // Default fallback link if not found in dictionary
+    return "https://yonorummyaa.com/?code=VIPQSYFW1U7&t=1747967855";
 }
 
 // ============================================================
@@ -252,9 +270,7 @@ function isAlreadyProcessed(messageId) {
     processedMessages.add(id);
 
     if (processedMessages.size > 2000) {
-        const first =
-            processedMessages.values().next().value;
-
+        const first = processedMessages.values().next().value;
         processedMessages.delete(first);
     }
 
@@ -262,7 +278,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (Fixed to send as proper photo instead of file)
+// SEND TO CHANNEL
 // ============================================================
 
 async function sendFinalPost(
@@ -293,7 +309,6 @@ async function sendFinalPost(
     }
 
     if (imageBuffer) {
-        // GramJS-এ ছবি হিসেবে পাঠানোর জন্য ফাইল অবজেক্টে name বা fileName দিতে হয়
         const photoFile = {
             source: imageBuffer,
             name: imageFileName
@@ -331,17 +346,9 @@ async function main() {
     console.log("🚀 TELEGRAM USERBOT STARTING");
     console.log("==============================================");
 
-    if (!API_ID) {
-        throw new Error("API_ID পাওয়া যায়নি।");
-    }
-
-    if (!API_HASH) {
-        throw new Error("API_HASH পাওয়া যায়নি।");
-    }
-
-    if (!SESSION_STRING) {
-        throw new Error("SESSION_STRING পাওয়া যায়নি।");
-    }
+    if (!API_ID) throw new Error("API_ID পাওয়া যায়নি।");
+    if (!API_HASH) throw new Error("API_HASH পাওয়া যায়নি।");
+    if (!SESSION_STRING) throw new Error("SESSION_STRING পাওয়া যায়নি।");
 
     const client =
         new TelegramClient(
@@ -356,7 +363,6 @@ async function main() {
         );
 
     console.log("🔄 Connecting to Telegram...");
-
     await client.connect();
 
     if (!await client.checkAuthorization()) {
@@ -364,9 +370,7 @@ async function main() {
     }
 
     console.log("==============================================");
-
     const me = await client.getMe();
-
     console.log("✅ USERBOT CONNECTED SUCCESSFULLY");
     console.log(`👤 User ID: ${me.id}`);
     console.log(`👤 Username: @${me.username || "NoUsername"}`);
@@ -376,17 +380,9 @@ async function main() {
     console.log(`📤 Destinations: ${DESTINATION_CHANNELS.length}`);
     console.log("==============================================");
 
-    // ========================================================
-    // CHECK SOURCE & GET ID
-    // ========================================================
-
     const sourceEntity = await client.getEntity(SOURCE_CHANNEL);
     const sourceEntityId = sourceEntity.id ? String(sourceEntity.id).replace("-100", "") : "";
     console.log(`✅ Source channel found: ${SOURCE_CHANNEL} (ID: ${sourceEntityId})`);
-
-    // ========================================================
-    // CHECK DESTINATIONS
-    // ========================================================
 
     for (const destination of DESTINATION_CHANNELS) {
         try {
@@ -402,28 +398,13 @@ async function main() {
     console.log(`👀 Watching ${SOURCE_CHANNEL}`);
     console.log("==============================================");
 
-    // ========================================================
-    // NEW MESSAGE EVENT
-    // ========================================================
-
     client.addEventHandler(
-
         async (event) => {
-
             const message = event.message;
-
-            if (!message) {
-                return;
-            }
+            if (!message) return;
 
             try {
-
-                // --------------------------------------------
-                // GET CHAT & ID / USERNAME VERIFICATION
-                // --------------------------------------------
-
                 const chat = await message.getChat().catch(() => null);
-
                 const chatIdStr = message.chatId ? String(message.chatId).replace("-100", "") : "";
                 const currentUsername = chat && chat.username ? normalizeUsername(chat.username) : "";
                 const sourceUsername = normalizeUsername(SOURCE_CHANNEL);
@@ -432,21 +413,9 @@ async function main() {
                     (sourceEntityId && chatIdStr && chatIdStr === sourceEntityId) ||
                     (sourceUsername && currentUsername && currentUsername === sourceUsername);
 
-                if (!isMatch) {
-                    return;
-                }
+                if (!isMatch) return;
 
-                // --------------------------------------------
-                // DUPLICATE
-                // --------------------------------------------
-
-                if (isAlreadyProcessed(`${sourceUsername}_${message.id}`)) {
-                    return;
-                }
-
-                // --------------------------------------------
-                // TEXT / CAPTION
-                // --------------------------------------------
+                if (isAlreadyProcessed(`${sourceUsername}_${message.id}`)) return;
 
                 const rawText =
                     message.message ||
@@ -464,24 +433,14 @@ async function main() {
                 console.log("📩 NEW PROMO POST DETECTED");
                 console.log(`🆔 Message ID: ${message.id}`);
 
-                // --------------------------------------------
-                // GAME NAME
-                // --------------------------------------------
-
                 const gameName = extractGameName(rawText);
-
                 if (!gameName) {
-                    console.log("❌ Game name not detected.");
-                    console.log(rawText.substring(0, 500));
+                    console.log("❌ Game name not detected. Raw text snippet:");
+                    console.log(rawText.substring(0, 300));
                     return;
                 }
 
-                // --------------------------------------------
-                // PROMO CODE
-                // --------------------------------------------
-
                 const promoCode = extractPromoCode(rawText);
-
                 if (!promoCode) {
                     console.log("❌ Promo code not detected.");
                     return;
@@ -490,22 +449,8 @@ async function main() {
                 console.log(`🎮 Game: ${gameName}`);
                 console.log(`🎟️ Promo Code: ${promoCode}`);
 
-                // --------------------------------------------
-                // GAME LINK
-                // --------------------------------------------
-
                 const gameLink = findGameLink(gameName);
-
-                if (!gameLink) {
-                    console.log(`❌ No matching game link for: ${gameName}`);
-                    return;
-                }
-
                 console.log(`🔗 Game Link matched successfully`);
-
-                // --------------------------------------------
-                // BUILD TEMPLATE
-                // --------------------------------------------
 
                 const formattedText = buildCaption(
                     gameName,
@@ -513,29 +458,14 @@ async function main() {
                     gameLink
                 );
 
-                // --------------------------------------------
-                // SEND TO ALL 8 CHANNELS
-                // --------------------------------------------
-
                 let successCount = 0;
-
                 for (const targetChat of DESTINATION_CHANNELS) {
-
                     try {
                         console.log(`📤 Sending post → ${targetChat}`);
-
-                        await sendFinalPost(
-                            client,
-                            targetChat,
-                            gameName,
-                            formattedText
-                        );
-
+                        await sendFinalPost(client, targetChat, gameName, formattedText);
                         successCount++;
                         console.log(`✅ Sent successfully → ${targetChat}`);
-
                         await new Promise(resolve => setTimeout(resolve, 700));
-
                     } catch (error) {
                         console.error(`❌ ${targetChat}: ${error.message}`);
                     }
@@ -548,17 +478,11 @@ async function main() {
             } catch (error) {
                 console.error("❌ MESSAGE ERROR:", error.message);
             }
-
         },
-
         new NewMessage({
             chats: [SOURCE_CHANNEL]
         })
     );
-
-    // ========================================================
-    // KEEP CONNECTION ALIVE
-    // ========================================================
 
     setInterval(
         async () => {
@@ -574,30 +498,16 @@ async function main() {
         30000
     );
 
-    // ========================================================
-    // GRACEFUL SHUTDOWN
-    // ========================================================
-
     process.on("SIGTERM", async () => {
-        console.log("🛑 SIGTERM received.");
-        try {
-            await client.disconnect();
-        } catch (_) {}
+        try { await client.disconnect(); } catch (_) {}
         process.exit(0);
     });
 
     process.on("SIGINT", async () => {
-        console.log("🛑 SIGINT received.");
-        try {
-            await client.disconnect();
-        } catch (_) {}
+        try { await client.disconnect(); } catch (_) {}
         process.exit(0);
     });
 }
-
-// ============================================================
-// START USERBOT
-// ============================================================
 
 main().catch(
     error => {
@@ -606,19 +516,12 @@ main().catch(
     }
 );
 
-// ============================================================
-// RENDER WEB SERVER
-// ============================================================
-
 const server = http.createServer((req, res) => {
-    res.writeHead(200, {
-        "Content-Type": "text/plain; charset=utf-8"
-    });
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Telegram Promo Userbot is running!\n");
 });
 
 const PORT = Number(process.env.PORT) || 10000;
-
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`🌐 Render server running on port ${PORT}`);
 });
