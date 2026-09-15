@@ -228,13 +228,13 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// TELEGRAM INLINE BUTTONS
+// TELEGRAM INLINE BUTTONS (Fixed with 'new')
 // ============================================================
 
 function buildButtons() {
     return FIXED_BUTTONS.map(row =>
         row.map(button =>
-            Api.KeyboardButtonUrl({
+            new Api.KeyboardButtonUrl({
                 text: button.text,
                 url: button.url
             })
@@ -305,7 +305,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL (Auto branch check & image fetch)
+// SEND TO CHANNEL
 // ============================================================
 
 async function sendFinalPost(
