@@ -8,10 +8,14 @@ const apiId = parseInt(process.env.API_ID);
 const apiHash = process.env.API_HASH;
 const stringSession = new StoreSession("userbot_session");
 
-// ১. সোর্স চ্যানেল যেখান থেকে ইউজার বট পোস্ট পড়বে
-const SOURCE_CHANNEL = 'AllYonoPromoCodegdfggs';
+// আপনার গিটহাবের ইউজারনেম এবং রিপোজিটরি নাম (ছবির জন্য)
+const GITHUB_USER = "newmp3info-glitch";
+const REPO_NAME = "Userbot";
 
-// ২. আপনার ১০টি টার্গেট চ্যানেল (যেখানে বট পোস্টগুলো পাঠাবে)
+// সোর্স চ্যানেল যেখান থেকে ইউজার বট পোস্ট পড়বে
+const SOURCE_CHANNEL = 'AllYonoPromoCodeyxvfdks';
+
+// আপনার ১০টি টার্গেট চ্যানেল
 const DESTINATION_CHANNELS = [
     'vipyonofreecode',
     'allyonorummycode',
@@ -25,7 +29,7 @@ const DESTINATION_CHANNELS = [
     'WinRummynet'
 ];
 
-// ৩. আপনার দেওয়া ৬০টি গেমের লিংক ম্যাপিং (Strict Matching)
+// ৬০টি গেমের সঠিক লিংক ম্যাপিং
 const GAME_LINKS = {
     "yono rummy": "https://yonorummyaa.com/?code=VIPQSYFW1U7&t=1747967855",
     "yono slots": "https://www.yonoslot.com/?code=PJBAVZSMQKB&t=1743101854",
@@ -101,7 +105,6 @@ async function main() {
 
     console.log("🚀 Userbot is successfully running and connected!");
 
-    // সোর্স চ্যানেল থেকে নতুন মেসেজ আসলে তা ফিল্টার ও প্রসেস করা
     client.addEventHandler(async (event) => {
         const message = event.message;
         if (!message) return;
@@ -111,11 +114,9 @@ async function main() {
             if (chat && (chat.username === SOURCE_CHANNEL || chat.title === SOURCE_CHANNEL)) {
                 let rawText = message.text || message.caption || '';
                 
-                // পোস্ট থেকে গেমের নাম এবং প্রমো কোড আলাদা করা
                 let gameNameMatch = rawText.match(/(.*?)\s+New\s+PromoCode/i);
                 let promoMatch = rawText.match(/Claim\s*>>\s*(.*)/i);
 
-                // ফিল্টার ১: সাধারণ টেক্সট বা অন্য পোস্ট হলে ইগনোর করবে
                 if (!gameNameMatch || !promoMatch) {
                     return; 
                 }
@@ -129,14 +130,18 @@ async function main() {
 
                 let cleanGameKey = gameName.toLowerCase();
 
-                // ফিল্টার ২: গেমের নামটি আপনার ৬০টি গেমের লিস্টে না থাকলে বাদ দিয়ে দেবে
+                // লিস্টের বাইরের গেম হলে ফিল্টার করে বাদ দিয়ে দেওয়া
                 if (!GAME_LINKS[cleanGameKey]) {
                     return; 
                 }
 
                 let userCustomLink = GAME_LINKS[cleanGameKey];
 
-                // আপনার নির্ধারিত টেমপ্লেট ডিজাইন
+                // গেমের নাম অনুযায়ী গিটহাবের হোমপেজের ছবি ম্যাচ করা
+                let imageFileName = cleanGameKey.replace(/\s+/g, '-') + '.jpg';
+                let githubImageUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/${imageFileName}`;
+
+                // আপনার কাঙ্ক্ষিত টেমপ্লেট ডিজাইন
                 let formattedText = `<b>${gameName} ➔ New promo code fast claim now!!</b>\n\n` +
                     `🎁 <b>PROMO CODE ➔</b> <code>${promoCodeText}</code>\n\n` +
                     `🎁 <b>New Users 🎉 SignUp Bonus Upto ₹49 - ₹199</b> <b>"</b>\n\n` +
@@ -144,21 +149,13 @@ async function main() {
                     `💰 <b>Minimum Amount ₹100 First Withdrawal</b> <b>"</b>\n\n` +
                     `🔥 <b>Join & Pin this channel for daily promo codes!</b> <b>"</b>`;
 
-                // আপনার ১০টি চ্যানেলে অটোমেটিক পোস্ট পাঠিয়ে দেওয়া
                 for (let targetChat of DESTINATION_CHANNELS) {
                     try {
-                        if (message.media) {
-                            await client.sendFile(targetChat, {
-                                file: message.media,
-                                caption: formattedText,
-                                parseMode: "html"
-                            });
-                        } else {
-                            await client.sendMessage(targetChat, {
-                                message: formattedText,
-                                parseMode: "html"
-                            });
-                        }
+                        await client.sendFile(targetChat, {
+                            file: githubImageUrl,
+                            caption: formattedText,
+                            parseMode: "html"
+                        });
                     } catch (err) {
                         console.error(`Error sending to ${targetChat}:`, err.message);
                     }
@@ -172,7 +169,6 @@ async function main() {
 
 main();
 
-// রেন্ডার (Render) সচল রাখার জন্য বেসিক ওয়েব সার্ভার
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Userbot server is running 24/7!\n');
