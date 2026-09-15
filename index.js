@@ -20,13 +20,13 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL (সংশোধিত: @ যুক্ত করা হয়েছে)
+// SOURCE CHANNEL
 // ============================================================
 
 const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 // ============================================================
-// 8 DESTINATION CHANNELS (সংশোধিত: @ যুক্ত করা হয়েছে)
+// 8 DESTINATION CHANNELS
 // ============================================================
 
 const DESTINATION_CHANNELS = [
@@ -337,7 +337,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL
+// SEND TO CHANNEL (সংশোধিত: ইমেজ লিংক থেকে Buffer তৈরি করে পাঠানো হয়েছে)
 // ============================================================
 
 async function sendFinalPost(
@@ -350,10 +350,18 @@ async function sendFinalPost(
         targetChat
     );
 
+    // Fetch image URL into Buffer so GramJS can send it properly
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+        throw new Error(`Failed to download image from URL: ${imageResponse.statusText}`);
+    }
+    const arrayBuffer = await imageResponse.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
+
     return await client.sendFile(
         entity,
         {
-            file: imageUrl,
+            file: imageBuffer,
             caption: caption,
             parseMode: "html",
             buttons: buildButtons(),
