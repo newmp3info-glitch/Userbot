@@ -136,7 +136,8 @@ const GAME_LINKS = {
     "dhan game": "https://www.dhanwinplay.com/?code=L2V36G8J9AR&t=1784777212",
     "win rummy": "https://www.winrummy27.com/?code=8JTZNTE666F&t=1785291927",
     "gold rummy": "https://goldrummy30.com/?code=JLXYHLPBTYR&t=1787106396",
-    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753"
+    "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753",
+    "yono777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205"
 };
 
 // ============================================================
@@ -167,25 +168,14 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION
+// GAME NAME DETECTION (সংশোধিত: আপনার স্টাইল অনুযায়ী আপডেট করা হয়েছে)
 // ============================================================
 
 function extractGameName(rawText) {
     if (!rawText) return null;
 
     let match = rawText.match(
-        /^\s*(.*?)\s+New\s+(?:App\s*[➜➔→>-]+\s*)?(?:New\s+)?Promo\s*Code\b/im
-    );
-
-    if (match && match[1]) {
-        return match[1]
-            .replace(/^[^\p{L}\p{N}]+/u, "")
-            .replace(/[^\p{L}\p{N}]+$/u, "")
-            .trim();
-    }
-
-    match = rawText.match(
-        /^\s*(.*?)\s+New\s+App\b/im
+        /^\s*(.*?)\s+(?:New\s+Promo\s*Code|New\s+(?:App\s*[➜➔→>-]+\s*)?(?:New\s+)?Promo\s*Code|New\s+App)\b/im
     );
 
     if (match && match[1]) {
@@ -199,15 +189,15 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// PROMO CODE DETECTION
+// PROMO CODE DETECTION (সংশোধিত: Claim >> অথবা কোড ডিটেক্ট করার জন্য)
 // ============================================================
 
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
     const patterns = [
-        /PROMO\s*CODE\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
         /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
+        /PROMO\s*CODE\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
         /PROMO\s*CODE\s*[:\-]?\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i
     ];
 
@@ -516,7 +506,7 @@ async function main() {
     );
 
     // ========================================================
-    // NEW MESSAGE EVENT (সংশোধিত: sourceEntity এর পরিবর্তে SOURCE_CHANNEL স্ট্রিং ব্যবহার করা হয়েছে)
+    // NEW MESSAGE EVENT
     // ========================================================
 
     client.addEventHandler(
