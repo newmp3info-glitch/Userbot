@@ -1,6 +1,7 @@
 const { TelegramClient, Api } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 const { NewMessage } = require("telegram/events");
+const { CustomFile } = require("telegram/client/uploads");
 const http = require("http");
 
 // ============================================================
@@ -142,11 +143,9 @@ function escapeHtml(value) {
 function extractGameName(rawText) {
     if (!rawText) return null;
 
-    // Remove emojis and clean text
     const cleanText = rawText.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
     const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
 
-    // Look for lines containing promo/code or take the first valid line
     for (const line of lines) {
         if (/promo|code|new/i.test(line)) {
             let parts = line.split(/new|promo|code/i);
@@ -173,7 +172,6 @@ function extractGameName(rawText) {
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
-    // Match after keywords or symbols like ➜, ➔, ->
     const match = rawText.match(/(?:CLAIM|Code|PROMO\s*CODE)\s*(?:➜|➔|→|>>|:|-)?\s*([A-Za-z0-9_-]+)/i);
     if (match && match[1]) {
         return match[1].trim();
@@ -209,7 +207,6 @@ function findGameLink(gameName) {
         }
     }
 
-    // Default fallback link if not found in dictionary
     return "https://yonorummyaa.com/?code=VIPQSYFW1U7&t=1747967855";
 }
 
@@ -278,7 +275,7 @@ function isAlreadyProcessed(messageId) {
 }
 
 // ============================================================
-// SEND TO CHANNEL
+// SEND TO CHANNEL (Fixed with CustomFile for proper photo preview)
 // ============================================================
 
 async function sendFinalPost(
@@ -309,15 +306,13 @@ async function sendFinalPost(
     }
 
     if (imageBuffer) {
-        const photoFile = {
-            source: imageBuffer,
-            name: imageFileName
-        };
+        const customFile = new CustomFile(imageFileName, imageBuffer.length, "", imageBuffer);
+        const uploadedFile = await client.uploadFile({ file: customFile });
 
         return await client.sendFile(
             entity,
             {
-                file: photoFile,
+                file: uploadedFile,
                 caption: caption,
                 parseMode: "html",
                 forceDocument: false
