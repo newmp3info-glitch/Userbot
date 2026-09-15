@@ -24,7 +24,7 @@ const GITHUB_BRANCH = "main";
 // SOURCE CHANNEL
 // ============================================================
 
-const SOURCE_CHANNEL = "@AllYonorummyCode";
+const SOURCE_CHANNEL = "@AllYonorummyCode1111";
 
 // ============================================================
 // 8 DESTINATION CHANNELS
