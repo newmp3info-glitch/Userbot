@@ -1,18 +1,18 @@
-const { TelegramClient, Api } = require("telegram");
+const { TelegramClient, Button } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 const { NewMessage } = require("telegram/events");
 const http = require("http");
 
 // ============================================================
-// ENVIRONMENT VARIABLES
+// TELEGRAM USERBOT ENVIRONMENT
 // ============================================================
 
-const apiId = parseInt(process.env.API_ID, 10);
-const apiHash = process.env.API_HASH || "";
-const sessionString = process.env.SESSION_STRING || "";
+const API_ID = parseInt(process.env.API_ID, 10);
+const API_HASH = process.env.API_HASH || "";
+const SESSION_STRING = process.env.SESSION_STRING || "";
 
 // ============================================================
-// GITHUB
+// GITHUB IMAGE SETTINGS
 // ============================================================
 
 const GITHUB_USER = "newmp3info-glitch";
@@ -26,7 +26,7 @@ const GITHUB_BRANCH = "main";
 const SOURCE_CHANNEL = "AllYonorummyCode";
 
 // ============================================================
-// DESTINATION CHANNELS
+// 8 DESTINATION CHANNELS
 // ============================================================
 
 const DESTINATION_CHANNELS = [
@@ -41,44 +41,51 @@ const DESTINATION_CHANNELS = [
 ];
 
 // ============================================================
-// FIXED BUTTONS
-//
-// Userbot-এর জন্য শুধু text + url ব্যবহার করা হচ্ছে.
-// কোনো BOT_TOKEN প্রয়োজন নেই.
+// FIXED 5 BUTTONS
 //
 // Row 1 = 2 buttons
 // Row 2 = 2 buttons
 // Row 3 = 1 button
+//
+// এগুলো Source Channel থেকে নেওয়া হবে না।
+// প্রতিটি নতুন পোস্টে একই 5টি button থাকবে.
+//
+// IMPORTANT:
+// Telegram URL buttons-এর নিজস্ব "primary/success" color
+// সেট করা যায় না। Telegram client নিজে button appearance
+// দেখায়। তাই এখানে শুধু text + URL ব্যবহার করা হয়েছে.
 // ============================================================
 
 const FIXED_BUTTONS = [
     [
-        {
-            text: "🎰 New Game 45",
-            url: "https://t.me/VipYonoFreeCode/3783"
-        },
-        {
-            text: "🎰 Total Game 70",
-            url: "https://t.me/AllYonoRummyCode/138"
-        }
+        Button.url(
+            "🎰 New Game 45",
+            "https://t.me/VipYonoFreeCode/3783"
+        ),
+
+        Button.url(
+            "🎰 Total Game 70",
+            "https://t.me/AllYonoRummyCode/138"
+        )
     ],
 
     [
-        {
-            text: "🤖 Yono AI Bot 🤖",
-            url: "https://t.me/YonoGamingHeadAIBot"
-        },
-        {
-            text: "🤖 Promo Code Bot 🤖",
-            url: "https://t.me/spin_crush_bot"
-        }
+        Button.url(
+            "🤖 Yono AI Bot 🤖",
+            "https://t.me/YonoGamingHeadAIBot"
+        ),
+
+        Button.url(
+            "🤖 Promo Code Bot 🤖",
+            "https://t.me/spin_crush_bot"
+        )
     ],
 
     [
-        {
-            text: "🔥 Yono Master App 🔥",
-            url: "https://www.fastyonoapp.online/"
-        }
+        Button.url(
+            "🔥 Yono Master App 🔥",
+            "https://www.fastyonoapp.online/"
+        )
     ]
 ];
 
@@ -149,7 +156,7 @@ const GAME_LINKS = {
 };
 
 // ============================================================
-// HELPER
+// HELPERS
 // ============================================================
 
 function normalizeUsername(value) {
@@ -180,66 +187,77 @@ function escapeHtml(value) {
 // ============================================================
 
 function extractGameName(rawText) {
-    if (!rawText) return null;
+    if (!rawText) {
+        return null;
+    }
 
-    const lines = rawText
+    const lines = String(rawText)
         .split(/\r?\n/)
         .map(line => line.trim())
         .filter(Boolean);
 
+    // --------------------------------------------------------
+    // Method 1:
+    // "Yono Rummy ➜ New promo code..."
+    // --------------------------------------------------------
+
     for (const line of lines) {
 
-        let clean = line
-            .replace(/<[^>]+>/g, " ")
-            .replace(/[*_`]/g, "")
-            .trim();
-
-        const match = clean.match(
-            /^(.+?)\s+➞?\s*New\s+(?:App\s+)?(?:New\s+)?Promo\s*Code\b/i
+        const match = line.match(
+            /^(.*?)\s+New\s+(?:App\s*[➜➔→>-]+\s*)?(?:New\s+)?Promo\s*Code\b/i
         );
 
         if (match && match[1]) {
-            return match[1]
-                .replace(
-                    /^[^\p{L}\p{N}]+/u,
-                    ""
-                )
-                .replace(
-                    /[^\p{L}\p{N}]+$/u,
-                    ""
-                )
-                .trim();
-        }
 
-        const match2 = clean.match(
-            /^(.+?)\s+New\s+App\b/i
-        );
-
-        if (match2 && match2[1]) {
-            return match2[1]
-                .replace(
-                    /^[^\p{L}\p{N}]+/u,
-                    ""
-                )
-                .replace(
-                    /[^\p{L}\p{N}]+$/u,
-                    ""
-                )
+            const result = match[1]
+                .replace(/^[^\p{L}\p{N}]+/u, "")
+                .replace(/[^\p{L}\p{N}]+$/u, "")
                 .trim();
+
+            if (result) {
+                return result;
+            }
         }
     }
 
-    // Fallback:
-    // GAME_LINKS-এর নামগুলোর মধ্যে source text-এ কোনটি আছে
-    const lowerText = normalizeGameName(rawText);
+    // --------------------------------------------------------
+    // Method 2:
+    // "Yono Rummy ➜ New App..."
+    // --------------------------------------------------------
+
+    for (const line of lines) {
+
+        const match = line.match(
+            /^(.*?)\s+New\s+App\b/i
+        );
+
+        if (match && match[1]) {
+
+            const result = match[1]
+                .replace(/^[^\p{L}\p{N}]+/u, "")
+                .replace(/[^\p{L}\p{N}]+$/u, "")
+                .trim();
+
+            if (result) {
+                return result;
+            }
+        }
+    }
+
+    // --------------------------------------------------------
+    // Method 3:
+    // Try matching known game names directly.
+    // --------------------------------------------------------
+
+    const lowerText =
+        normalizeGameName(rawText);
 
     for (const key of Object.keys(GAME_LINKS)) {
 
-        const normalizedKey =
-            normalizeGameName(key);
-
         if (
-            lowerText.includes(normalizedKey)
+            lowerText.includes(
+                normalizeGameName(key)
+            )
         ) {
             return key;
         }
@@ -253,23 +271,26 @@ function extractGameName(rawText) {
 // ============================================================
 
 function extractPromoCode(rawText) {
-    if (!rawText) return null;
+
+    if (!rawText) {
+        return null;
+    }
 
     const patterns = [
 
         /PROMO\s*CODE\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
 
-        /PROMO\s*CODE\s*[\r\n]+\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
+        /PROMO\s*CODE\s+([A-Za-z0-9][A-Za-z0-9._-]*)/i,
 
         /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
 
-        /PROMOCODE\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i
+        /PROMO\s*[:\-]\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i
     ];
 
     for (const pattern of patterns) {
 
         const match =
-            rawText.match(pattern);
+            String(rawText).match(pattern);
 
         if (
             match &&
@@ -283,10 +304,14 @@ function extractPromoCode(rawText) {
 }
 
 // ============================================================
-// GAME LINK
+// FIND GAME LINK
 // ============================================================
 
 function findGameLink(gameName) {
+
+    if (!gameName) {
+        return null;
+    }
 
     const normalized =
         normalizeGameName(gameName);
@@ -321,83 +346,18 @@ function getImageUrl(gameName) {
         normalizeGameName(gameName);
 
     const imageFileName =
-        normalized.replace(
-            /\s+/g,
-            "-"
-        ) + ".jpg";
+        normalized.replace(/\s+/g, "-") +
+        ".jpg";
 
     return (
         "https://raw.githubusercontent.com/" +
-        GITHUB_USER +
-        "/" +
-        REPO_NAME +
-        "/" +
-        GITHUB_BRANCH +
-        "/" +
-        imageFileName
+        `${GITHUB_USER}/${REPO_NAME}/` +
+        `${GITHUB_BRANCH}/${imageFileName}`
     );
 }
 
 // ============================================================
-// BUTTON VALIDATION
-// ============================================================
-
-function validateFixedButtons() {
-
-    for (const row of FIXED_BUTTONS) {
-
-        if (!Array.isArray(row)) {
-            throw new Error(
-                "Fixed button row invalid."
-            );
-        }
-
-        for (const button of row) {
-
-            if (
-                !button.text ||
-                !button.url
-            ) {
-                throw new Error(
-                    "একটি button-এর text অথবা URL খালি আছে।"
-                );
-            }
-
-            if (
-                !/^https?:\/\//i.test(
-                    button.url
-                )
-            ) {
-                throw new Error(
-                    `Invalid button URL: ${button.url}`
-                );
-            }
-        }
-    }
-}
-
-// ============================================================
-// CONVERT BUTTONS FOR USERBOT
-// ============================================================
-
-function createTelegramButtons() {
-
-    return FIXED_BUTTONS.map(row => {
-
-        return row.map(button => {
-
-            return Api.KeyboardButtonUrl({
-                text: button.text,
-                url: button.url
-            });
-
-        });
-
-    });
-}
-
-// ============================================================
-// BUILD CAPTION
+// CAPTION TEMPLATE
 // ============================================================
 
 function buildCaption(
@@ -412,6 +372,9 @@ function buildCaption(
     const safePromoCode =
         escapeHtml(promoCode);
 
+    const safeGameLink =
+        escapeHtml(gameLink);
+
     return (
         `<b>${safeGameName} ➞ New promo code fast claim now!!</b> 💰\n\n` +
 
@@ -423,7 +386,7 @@ function buildCaption(
         `</blockquote>\n\n` +
 
         `🎰 <b>${safeGameName.toUpperCase()} LINK</b> 👉 ` +
-        `<a href="${gameLink}">` +
+        `<a href="${safeGameLink}">` +
         `<b>Download Now</b>` +
         `</a> 📱\n\n` +
 
@@ -433,6 +396,155 @@ function buildCaption(
         `🔥 Join &amp; Pin this channel for daily promo codes!` +
         `</blockquote>`
     );
+}
+
+// ============================================================
+// FLOOD WAIT HANDLER
+// ============================================================
+
+async function sleep(ms) {
+    return new Promise(
+        resolve => setTimeout(resolve, ms)
+    );
+}
+
+async function sendToChannel(
+    client,
+    targetChannel,
+    imageUrl,
+    caption
+) {
+
+    const entity =
+        await client.getEntity(
+            targetChannel
+        );
+
+    let attempts = 0;
+
+    while (attempts < 3) {
+
+        attempts++;
+
+        try {
+
+            // ------------------------------------------------
+            // Send photo + caption + fixed buttons
+            // ------------------------------------------------
+
+            await client.sendFile(
+                entity,
+                {
+                    file: imageUrl,
+
+                    caption: caption,
+
+                    parseMode: "html",
+
+                    buttons: FIXED_BUTTONS,
+
+                    forceDocument: false
+                }
+            );
+
+            return true;
+
+        } catch (error) {
+
+            const message =
+                String(
+                    error &&
+                    error.message
+                    ? error.message
+                    : error
+                );
+
+            // ----------------------------------------------
+            // FloodWait
+            // ----------------------------------------------
+
+            if (
+                error &&
+                error.seconds
+            ) {
+
+                const seconds =
+                    Number(error.seconds) || 10;
+
+                console.log(
+                    `⏳ FloodWait @${targetChannel}: ${seconds}s`
+                );
+
+                await sleep(
+                    (seconds + 2) * 1000
+                );
+
+                continue;
+            }
+
+            if (
+                /FLOOD_WAIT/i.test(message)
+            ) {
+
+                console.log(
+                    `⏳ FloodWait detected @${targetChannel}`
+                );
+
+                await sleep(15000);
+
+                continue;
+            }
+
+            // ----------------------------------------------
+            // Photo failed
+            // ----------------------------------------------
+
+            if (
+                attempts === 1
+            ) {
+
+                console.log(
+                    `⚠️ Image send failed @${targetChannel}`
+                );
+
+                console.log(
+                    "⚠️ Trying text post instead..."
+                );
+
+                try {
+
+                    await client.sendMessage(
+                        entity,
+                        {
+                            message: caption,
+
+                            parseMode: "html",
+
+                            buttons: FIXED_BUTTONS
+                        }
+                    );
+
+                    return true;
+
+                } catch (textError) {
+
+                    console.error(
+                        `❌ Text fallback failed @${targetChannel}:`,
+                        textError.message
+                    );
+                }
+            }
+
+            console.error(
+                `❌ Send failed @${targetChannel}:`,
+                message
+            );
+
+            return false;
+        }
+    }
+
+    return false;
 }
 
 // ============================================================
@@ -462,7 +574,7 @@ function isAlreadyProcessed(
     processedMessages.add(id);
 
     if (
-        processedMessages.size > 1000
+        processedMessages.size > 2000
     ) {
 
         const first =
@@ -480,107 +592,83 @@ function isAlreadyProcessed(
 }
 
 // ============================================================
-// SEND PHOTO USING USER ACCOUNT
-// ============================================================
-
-async function sendFinalPost(
-    client,
-    targetChat,
-    imageUrl,
-    caption
-) {
-
-    const buttons =
-        createTelegramButtons();
-
-    return await client.sendFile(
-        `@${normalizeUsername(targetChat)}`,
-        {
-            file: imageUrl,
-
-            caption: caption,
-
-            parseMode: "html",
-
-            buttons: buttons
-        }
-    );
-}
-
-// ============================================================
-// MAIN
+// MAIN USERBOT
 // ============================================================
 
 async function main() {
 
     console.log("");
     console.log(
-        "=============================================="
+        "================================================"
     );
     console.log(
         "🚀 TELEGRAM USERBOT STARTING"
     );
     console.log(
-        "=============================================="
+        "================================================"
     );
 
     // --------------------------------------------------------
-    // ENV CHECK
+    // Environment validation
     // --------------------------------------------------------
 
     if (
-        !apiId ||
-        Number.isNaN(apiId)
+        !API_ID ||
+        Number.isNaN(API_ID)
     ) {
 
         throw new Error(
-            "❌ API_ID পাওয়া যায়নি।"
+            "API_ID পাওয়া যায়নি। Render Environment Variables চেক করুন।"
         );
     }
-
-    if (!apiHash) {
-
-        throw new Error(
-            "❌ API_HASH পাওয়া যায়নি।"
-        );
-    }
-
-    if (!sessionString) {
-
-        throw new Error(
-            "❌ SESSION_STRING পাওয়া যায়নি।"
-        );
-    }
-
-    validateFixedButtons();
 
     console.log(
         "✅ API_ID found"
     );
 
+    if (!API_HASH) {
+
+        throw new Error(
+            "API_HASH পাওয়া যায়নি। Render Environment Variables চেক করুন।"
+        );
+    }
+
     console.log(
         "✅ API_HASH found"
     );
+
+    if (!SESSION_STRING) {
+
+        throw new Error(
+            "SESSION_STRING পাওয়া যায়নি। Render Environment Variables চেক করুন।"
+        );
+    }
 
     console.log(
         "✅ SESSION_STRING found"
     );
 
+    // --------------------------------------------------------
+    // IMPORTANT:
+    // No BOT_TOKEN here.
+    // This is a pure Telegram Userbot.
+    // --------------------------------------------------------
+
     console.log(
-        "❌ BOT_TOKEN লাগবে না"
+        "✅ BOT_TOKEN not required"
     );
 
     // --------------------------------------------------------
-    // TELEGRAM CLIENT
+    // Create Telegram client
     // --------------------------------------------------------
 
     const client =
         new TelegramClient(
             new StringSession(
-                sessionString
+                SESSION_STRING
             ),
-            apiId,
-            apiHash,
+            API_ID,
+            API_HASH,
             {
                 connectionRetries: 10,
                 autoReconnect: true
@@ -588,17 +676,14 @@ async function main() {
         );
 
     console.log(
-        "🔄 Connecting to Telegram..."
+        "📡 Connecting to Telegram..."
     );
 
-    // SESSION_STRING ব্যবহার করছি।
-    // তাই Render-এ phone/code/password চাইবে না।
+    // --------------------------------------------------------
+    // Connect using existing session
+    // --------------------------------------------------------
 
     await client.connect();
-
-    // --------------------------------------------------------
-    // AUTH CHECK
-    // --------------------------------------------------------
 
     const authorized =
         await client.checkAuthorization();
@@ -606,12 +691,12 @@ async function main() {
     if (!authorized) {
 
         throw new Error(
-            "❌ SESSION_STRING valid নয় অথবা session expired হয়েছে।"
+            "SESSION_STRING valid নয় অথবা Telegram authorization পাওয়া যায়নি। নতুন SESSION_STRING তৈরি করুন।"
         );
     }
 
     // --------------------------------------------------------
-    // USER INFORMATION
+    // Get current user
     // --------------------------------------------------------
 
     const me =
@@ -619,7 +704,7 @@ async function main() {
 
     console.log("");
     console.log(
-        "=============================================="
+        "================================================"
     );
 
     console.log(
@@ -630,21 +715,12 @@ async function main() {
         `👤 User ID: ${me.id}`
     );
 
-    if (me.username) {
-
-        console.log(
-            `👤 Username: @${me.username}`
-        );
-
-    } else {
-
-        console.log(
-            "👤 Username: নেই"
-        );
-    }
+    console.log(
+        `👤 Username: @${me.username || "NoUsername"}`
+    );
 
     console.log(
-        "=============================================="
+        "================================================"
     );
 
     console.log(
@@ -660,18 +736,20 @@ async function main() {
     );
 
     console.log(
-        "=============================================="
+        "================================================"
     );
 
     // --------------------------------------------------------
-    // CHECK SOURCE
+    // Resolve source channel
     // --------------------------------------------------------
+
+    let sourceEntity;
 
     try {
 
-        const sourceEntity =
+        sourceEntity =
             await client.getEntity(
-                `@${normalizeUsername(SOURCE_CHANNEL)}`
+                SOURCE_CHANNEL
             );
 
         console.log(
@@ -680,18 +758,67 @@ async function main() {
 
     } catch (error) {
 
-        console.error(
-            `❌ Source channel পাওয়া যাচ্ছে না: @${SOURCE_CHANNEL}`
-        );
-
-        console.error(
-            error.message
+        throw new Error(
+            `Source channel পাওয়া যায়নি: @${SOURCE_CHANNEL} | ${error.message}`
         );
     }
 
     // --------------------------------------------------------
-    // NEW MESSAGE EVENT
+    // Verify destination channels
     // --------------------------------------------------------
+
+    console.log("");
+    console.log(
+        "🔎 Checking destination channels..."
+    );
+
+    for (
+        const target
+        of DESTINATION_CHANNELS
+    ) {
+
+        try {
+
+            await client.getEntity(
+                target
+            );
+
+            console.log(
+                `✅ Target OK: @${target}`
+            );
+
+        } catch (error) {
+
+            console.error(
+                `❌ Target NOT accessible: @${target}`
+            );
+
+            console.error(
+                `   ${error.message}`
+            );
+        }
+    }
+
+    console.log("");
+    console.log(
+        "================================================"
+    );
+
+    console.log(
+        "🟢 USERBOT IS NOW LISTENING FOR NEW POSTS..."
+    );
+
+    console.log(
+        `👀 Watching: @${SOURCE_CHANNEL}`
+    );
+
+    console.log(
+        "================================================"
+    );
+
+    // ========================================================
+    // NEW MESSAGE LISTENER
+    // ========================================================
 
     client.addEventHandler(
 
@@ -707,30 +834,24 @@ async function main() {
             try {
 
                 // ------------------------------------------------
-                // GET CHAT
+                // SOURCE CHAT CHECK
                 // ------------------------------------------------
 
-                const chat =
-                    await message.getChat();
+                const chatId =
+                    message.chatId;
 
-                if (!chat) {
+                if (!chatId) {
                     return;
                 }
 
-                const currentUsername =
-                    normalizeUsername(
-                        chat.username
-                    );
-
-                const sourceUsername =
-                    normalizeUsername(
-                        SOURCE_CHANNEL
-                    );
+                const sourceId =
+                    sourceEntity.id;
 
                 if (
-                    currentUsername !==
-                    sourceUsername
+                    String(chatId) !==
+                    String(sourceId)
                 ) {
+
                     return;
                 }
 
@@ -744,26 +865,20 @@ async function main() {
                     )
                 ) {
 
-                    console.log(
-                        `⏭️ Duplicate message skipped: ${message.id}`
-                    );
-
                     return;
                 }
 
                 // ------------------------------------------------
-                // TEXT / CAPTION
+                // GET TEXT
                 // ------------------------------------------------
 
                 const rawText =
                     message.message ||
                     message.text ||
-                    message.caption ||
                     "";
 
                 if (
-                    !rawText ||
-                    !rawText.trim()
+                    !String(rawText).trim()
                 ) {
 
                     console.log(
@@ -775,7 +890,7 @@ async function main() {
 
                 console.log("");
                 console.log(
-                    "=============================================="
+                    "================================================"
                 );
 
                 console.log(
@@ -798,17 +913,13 @@ async function main() {
                 if (!gameName) {
 
                     console.log(
-                        "❌ Game name not detected."
-                    );
-
-                    console.log(
-                        "SOURCE TEXT:"
+                        "❌ Game name could not be detected."
                     );
 
                     console.log(
                         rawText.substring(
                             0,
-                            1000
+                            700
                         )
                     );
 
@@ -831,18 +942,7 @@ async function main() {
                 if (!promoCode) {
 
                     console.log(
-                        "❌ Promo code not detected."
-                    );
-
-                    console.log(
-                        "SOURCE TEXT:"
-                    );
-
-                    console.log(
-                        rawText.substring(
-                            0,
-                            1000
-                        )
+                        "❌ Promo code could not be detected."
                     );
 
                     return;
@@ -888,136 +988,101 @@ async function main() {
                 );
 
                 // ------------------------------------------------
-                // CAPTION
+                // BUILD TEMPLATE
                 // ------------------------------------------------
 
-                const formattedText =
+                const caption =
                     buildCaption(
                         gameName,
                         promoCode,
                         gameLink
                     );
 
-                // ------------------------------------------------
-                // TELEGRAM BUTTONS
-                // ------------------------------------------------
-
-                const telegramButtons =
-                    createTelegramButtons();
-
                 console.log(
-                    "🔘 5 fixed buttons prepared."
+                    "📝 Template created"
                 );
 
                 // ------------------------------------------------
-                // SEND TO DESTINATIONS
+                // SEND TO ALL 8 CHANNELS
                 // ------------------------------------------------
 
                 let successCount = 0;
                 let failedCount = 0;
 
+                console.log("");
+                console.log(
+                    "📤 STARTING 8-CHANNEL POSTING..."
+                );
+
                 for (
-                    const targetChat
+                    const target
                     of DESTINATION_CHANNELS
                 ) {
 
-                    try {
+                    console.log("");
+                    console.log(
+                        `📤 Sending → @${target}`
+                    );
 
-                        console.log("");
-                        console.log(
-                            `📤 Sending → @${targetChat}`
-                        );
-
-                        await sendFinalPost(
+                    const success =
+                        await sendToChannel(
                             client,
-                            targetChat,
+                            target,
                             imageUrl,
-                            formattedText
+                            caption
                         );
+
+                    if (success) {
 
                         successCount++;
 
                         console.log(
-                            `✅ Sent → @${targetChat}`
+                            `✅ SENT → @${target}`
                         );
 
-                        // Delay
-                        await new Promise(
-                            resolve =>
-                                setTimeout(
-                                    resolve,
-                                    800
-                                )
-                        );
-
-                    } catch (error) {
+                    } else {
 
                         failedCount++;
 
-                        console.error(
-                            `❌ Failed → @${targetChat}`
+                        console.log(
+                            `❌ FAILED → @${target}`
                         );
-
-                        console.error(
-                            error.message
-                        );
-
-                        // Flood wait handling
-                        if (
-                            error.message &&
-                            /flood|wait/i.test(
-                                error.message
-                            )
-                        ) {
-
-                            console.log(
-                                "⏳ Telegram FloodWait detected."
-                            );
-
-                            await new Promise(
-                                resolve =>
-                                    setTimeout(
-                                        resolve,
-                                        5000
-                                    )
-                            );
-                        }
                     }
-                }
 
-                // ------------------------------------------------
-                // RESULT
-                // ------------------------------------------------
+                    // ------------------------------------------------
+                    // Small delay between channels
+                    // ------------------------------------------------
+
+                    await sleep(
+                        1000
+                    );
+                }
 
                 console.log("");
                 console.log(
-                    "=============================================="
+                    "================================================"
                 );
 
                 console.log(
-                    "📊 POST RESULT"
+                    "📊 POSTING COMPLETE"
                 );
 
                 console.log(
-                    `✅ Success: ${successCount}`
+                    `✅ Successful: ${successCount}/8`
                 );
 
                 console.log(
-                    `❌ Failed: ${failedCount}`
+                    `❌ Failed: ${failedCount}/8`
                 );
 
                 console.log(
-                    `📤 Total: ${DESTINATION_CHANNELS.length}`
-                );
-
-                console.log(
-                    "=============================================="
+                    "================================================"
                 );
 
             } catch (error) {
 
                 console.error(
-                    "❌ MESSAGE ERROR:"
+                    "❌ MESSAGE PROCESSING ERROR:"
                 );
 
                 console.error(
@@ -1029,17 +1094,40 @@ async function main() {
         new NewMessage({})
     );
 
-    console.log("");
-    console.log(
-        "🟢 USERBOT IS NOW LISTENING FOR NEW POSTS..."
-    );
+    // --------------------------------------------------------
+    // Keep connection alive
+    // --------------------------------------------------------
 
-    console.log(
-        `👀 Watching: @${SOURCE_CHANNEL}`
-    );
+    setInterval(
+        async () => {
 
-    console.log(
-        "=============================================="
+            try {
+
+                if (
+                    !client.connected
+                ) {
+
+                    console.log(
+                        "🔄 Telegram connection lost. Reconnecting..."
+                    );
+
+                    await client.connect();
+
+                    console.log(
+                        "✅ Telegram reconnected."
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "❌ Reconnect error:",
+                    error.message
+                );
+            }
+
+        },
+        30000
     );
 }
 
@@ -1052,20 +1140,25 @@ main().catch(
 
         console.error("");
         console.error(
+            "================================================"
+        );
+
+        console.error(
             "🔥 USERBOT START ERROR"
         );
 
         console.error(
-            error.message ||
-            error
+            error.message || error
         );
 
-        console.error("");
+        console.error(
+            "================================================"
+        );
     }
 );
 
 // ============================================================
-// RENDER HEALTH SERVER
+// RENDER WEB SERVER
 // ============================================================
 
 const server =
@@ -1087,7 +1180,7 @@ const server =
     );
 
 const PORT =
-    process.env.PORT || 3000;
+    process.env.PORT || 10000;
 
 server.listen(
     PORT,
