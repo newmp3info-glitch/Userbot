@@ -32,6 +32,12 @@ const SOURCE_CHANNEL = "@AllYonorummyCode";
 
 const DESTINATION_CHANNELS = [
     "@totalyonocode",
+    "@fullyonocode",
+    "@superyonocode",
+    "@LootYonoCode",
+    "@FastYonoCode",
+    "@RealYonoCode",
+    "@VipFreeYonoCode",
     "@WinRummynet"
 ];
 
@@ -128,7 +134,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// CLEAN GAME NAME DETECTION (Removes all emojis and symbols)
+// FULL GAME NAME DETECTION (Preserves numbers like 213, 777)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -139,9 +145,9 @@ function extractGameName(rawText) {
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
             let cleanLine = line.replace(/new\s*promocode|promocode|claim/gi, "").trim();
-            // Completely strip out all emojis and arrows
+            // Strip emojis but KEEP numbers and hyphens (like Bet-213)
             cleanLine = cleanLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-            cleanLine = cleanLine.replace(/[\/\-\–\—\>]+/g, " ").trim();
+            cleanLine = cleanLine.replace(/[\/\–\—\>]+/g, " ").trim();
             if (cleanLine.length > 1) {
                 return cleanLine;
             }
@@ -151,7 +157,7 @@ function extractGameName(rawText) {
     if (lines.length > 0) {
         let firstLine = lines[0].replace(/new\s*promocode.*$/i, "").trim();
         firstLine = firstLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-        firstLine = firstLine.replace(/[\/\-\–\—\>]+/g, " ").trim();
+        firstLine = firstLine.replace(/[\/\–\—\>]+/g, " ").trim();
         if (firstLine.length > 1) {
             return firstLine;
         }
@@ -161,7 +167,7 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// CLEAN PROMO CODE DETECTION (Strips all emojis and unwanted text)
+// CLEAN PROMO CODE DETECTION
 // ============================================================
 
 function extractPromoCode(rawText) {
@@ -173,7 +179,6 @@ function extractPromoCode(rawText) {
             const parts = line.split(/>>|➜|➔|→|:/);
             if (parts.length > 1) {
                 let candidate = parts.slice(1).join(':').trim();
-                // Completely strip out emojis like 👇, 👉, etc.
                 candidate = candidate.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
                 
                 const tokens = candidate.split(/\s+/);
@@ -219,7 +224,7 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// CLEAN TEMPLATE (Strictly controlled design, no source emojis)
+// CLEAN TEMPLATE
 // ============================================================
 
 function buildCaption(
@@ -447,7 +452,6 @@ async function main() {
                 console.log(`🎮 Game: ${gameName}`);
                 console.log(`🎟️ Promo Code: ${promoCode}`);
 
-                // Gets your personal referral link from your own GAME_LINKS list
                 const gameLink = findGameLink(gameName);
                 console.log(`🔗 Personal Referral Link Matched Successfully`);
 
