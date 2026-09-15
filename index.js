@@ -137,28 +137,30 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION
+// ROBUST GAME NAME DETECTION
 // ============================================================
 
 function extractGameName(rawText) {
     if (!rawText) return null;
 
-    const cleanText = rawText.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
-    const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
-
+    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+    
+    // Check first few lines for game name before "New PromoCode" or similar keywords
     for (const line of lines) {
-        if (/promo|code|new/i.test(line)) {
-            let parts = line.split(/new|promo|code/i);
-            if (parts[0] && parts[0].trim().length > 1) {
-                return parts[0].trim();
+        if (/new\s*promocode|promocode|claim/i.test(line)) {
+            let cleanLine = line.replace(/new\s*promocode|promocode|claim/gi, "").trim();
+            cleanLine = cleanLine.replace(/[\/\-\–\—\>]+/g, " ").trim();
+            if (cleanLine.length > 1) {
+                return cleanLine;
             }
         }
     }
 
     if (lines.length > 0) {
-        let candidate = lines[0].replace(/new.*$/i, '').trim();
-        if (candidate.length > 1 && candidate.length < 35) {
-            return candidate;
+        let firstLine = lines[0].replace(/new\s*promocode.*$/i, "").trim();
+        firstLine = firstLine.replace(/[\/\-\–\—\>]+/g, " ").trim();
+        if (firstLine.length > 1) {
+            return firstLine;
         }
     }
 
@@ -166,23 +168,23 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// FIXED PROMO CODE DETECTION (Keeps full code including .com/.net)
+// ROBUST PROMO CODE DETECTION (Keeps full domain/code)
 // ============================================================
 
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
-    // Looks for Claim > or Claim: and grabs the full text/domain (.com, .net, etc.)
-    const match = rawText.match(/(?:CLAIM|Code|PROMO\s*CODE)\s*(?:➜|➔|→|>>|:|-)?\s*([^\s\r\n]+)/i);
+    // Matches patterns like "Claim >> spingoldvipagent.net" or "Claim: code"
+    const match = rawText.match(/claim\s*(?:➜|➔|→|>>|:|-)\s*([^\s\r\n]+)/i);
     if (match && match[1]) {
         return match[1].trim();
     }
 
     const lines = rawText.split('\n');
     for (const line of lines) {
-        if (line.includes('➜') || line.includes('➔') || line.includes('→') || line.includes(':')) {
-            const parts = line.split(/➜|➔|→|>>|:/);
-            if (parts[1] && parts[1].trim().length >= 3) {
+        if (/claim/i.test(line) && (line.includes('>>') || line.includes('➜') || line.includes('→') || line.includes(':'))) {
+            const parts = line.split(/>>|➜|➔|→|:/);
+            if (parts[1] && parts[1].trim().length > 0) {
                 return parts[1].trim().split(/\s+/)[0];
             }
         }
@@ -192,7 +194,7 @@ function extractPromoCode(rawText) {
 }
 
 // ============================================================
-// GAME LINK FINDER (From your predefined list)
+// SMART GAME LINK FINDER
 // ============================================================
 
 function findGameLink(gameName) {
@@ -202,12 +204,15 @@ function findGameLink(gameName) {
         return GAME_LINKS[normalized];
     }
 
+    // Partial/Flexible matching
     for (const [key, url] of Object.entries(GAME_LINKS)) {
-        if (normalizeGameName(key) === normalized || normalized.includes(normalizeGameName(key)) || normalizeGameName(key).includes(normalized)) {
+        const normKey = normalizeGameName(key);
+        if (normalized.includes(normKey) || normKey.includes(normalized)) {
             return url;
         }
     }
 
+    // Default fallback link
     return "https://yonorummyaa.com/?code=VIPQSYFW1U7&t=1747967855";
 }
 
@@ -427,8 +432,7 @@ async function main() {
 
                 const gameName = extractGameName(rawText);
                 if (!gameName) {
-                    console.log("❌ Game name not detected. Raw text snippet:");
-                    console.log(rawText.substring(0, 300));
+                    console.log("❌ Game name not detected.");
                     return;
                 }
 
@@ -441,9 +445,9 @@ async function main() {
                 console.log(`🎮 Game: ${gameName}`);
                 console.log(`🎟️ Promo Code: ${promoCode}`);
 
-                // Automatically fetches your personal link from GAME_LINKS dictionary based on the game name
+                // Gets your personal referral link from your list
                 const gameLink = findGameLink(gameName);
-                console.log(`🔗 Personal Game Link matched successfully`);
+                console.log(`🔗 Personal Referral Link Matched Successfully`);
 
                 const formattedText = buildCaption(
                     gameName,
