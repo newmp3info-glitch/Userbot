@@ -20,7 +20,7 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL
+// SOURCE CHANNEL (প্রয়োজনে এই চ্যানেলের সঠিক ইউজারনেম দিন)
 // ============================================================
 
 const SOURCE_CHANNEL = "@AllYonorummyCode";
@@ -131,13 +131,19 @@ const GAME_LINKS = {
     "inr rummy": "https://inrrummy.cc/?code=JMQESK3J5UR&t=1767494008",
     "saga slots": "https://sagaslotsw.com/?code=0QHPZS4EJXM&t=1747969670",
     "yono 777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205",
+    "yono777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205",
     "yn777": "https://www.y754.com/?code=4SWJ2Z2RNC2&t=1759154214",
     "max rummy": "https://www.maxrummy444.com/?code=QUMF17KD7HQ&t=1783566553",
     "dhan game": "https://www.dhanwinplay.com/?code=L2V36G8J9AR&t=1784777212",
     "win rummy": "https://www.winrummy27.com/?code=8JTZNTE666F&t=1785291927",
     "gold rummy": "https://goldrummy30.com/?code=JLXYHLPBTYR&t=1787106396",
     "money rummy": "https://moneyrummyq.com/?code=3T72BTVLHB3&t=1788920753",
-    "yono777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205"
+    "top rummy": "https://www.toprummy.xyz/?code=7K9K1JCKCC5&t=1783792105",
+    "abc rummy": "https://www.22abcrummy.com/?code=75C92CLAD92&t=1779814560",
+    "jaiho rummy": "https://www.jaihoclyclub.com/?code=E74ALBMPNFT&t=1779814509",
+    "slots winner": "https://www.slotswinnerhp.com/?code=PGVHTFC4C4K&t=1779813551",
+    "love rummy": "https://www.8loverummy.com/?code=AF CGCQYZQ5E&t=1757156156",
+    "rummy 77": "https://www.rummy77a.com/?code=F3V9E5R2BKS&t=1763692222"
 };
 
 // ============================================================
@@ -168,14 +174,14 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// GAME NAME DETECTION (সংশোধিত: আপনার স্টাইল অনুযায়ী আপডেট করা হয়েছে)
+// GAME NAME DETECTION (নতুন ফরম্যাট অনুযায়ী)
 // ============================================================
 
 function extractGameName(rawText) {
     if (!rawText) return null;
 
     let match = rawText.match(
-        /^\s*(.*?)\s+(?:New\s+Promo\s*Code|New\s+(?:App\s*[➜➔→>-]+\s*)?(?:New\s+)?Promo\s*Code|New\s+App)\b/im
+        /^\s*(.*?)\s+New\s+PromoCode\b/im
     );
 
     if (match && match[1]) {
@@ -189,24 +195,18 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// PROMO CODE DETECTION (সংশোধিত: Claim >> অথবা কোড ডিটেক্ট করার জন্য)
+// PROMO CODE DETECTION (Claim >> এর পরের অংশ বা কোড ধরার জন্য)
 // ============================================================
 
 function extractPromoCode(rawText) {
     if (!rawText) return null;
 
-    const patterns = [
-        /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
-        /PROMO\s*CODE\s*(?:➜|➔|→|>>|:|-)\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i,
-        /PROMO\s*CODE\s*[:\-]?\s*([A-Za-z0-9][A-Za-z0-9._-]*)/i
-    ];
+    const match = rawText.match(
+        /CLAIM\s*(?:➜|➔|→|>>|:|-)\s*([^\r\n]+)/i
+    );
 
-    for (const pattern of patterns) {
-        const match = rawText.match(pattern);
-
-        if (match && match[1]) {
-            return match[1].trim();
-        }
+    if (match && match[1]) {
+        return match[1].trim();
     }
 
     return null;
