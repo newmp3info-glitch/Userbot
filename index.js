@@ -27,7 +27,7 @@ const GITHUB_BRANCH = "main";
 const SOURCE_CHANNEL = "@YonoSecretPromoCodes";
 
 // ============================================================
-// 10 DESTINATION CHANNELS (এখানে মোট ১০টি চ্যানেল সেট করা হয়েছে)
+// 10 DESTINATION CHANNELS
 // ============================================================
 
 const DESTINATION_CHANNELS = [
@@ -38,13 +38,11 @@ const DESTINATION_CHANNELS = [
     "@FastYonoCode",
     "@RealYonoCode",
     "@VipFreeYonoCode",
-    "@WinRummynet",
-    "@VipYonoFreeCode",
-    "@AllYonoRummyCode"
+    "@WinRummynet"
 ];
 
 // ============================================================
-// YOUR PERSONAL REFERRAL GAME LINKS (আপনাদের নিজস্ব লিংক)
+// YOUR PERSONAL REFERRAL GAME LINKS
 // ============================================================
 
 const GAME_LINKS = {
@@ -388,16 +386,12 @@ async function main() {
     console.log(`📤 Destinations: ${DESTINATION_CHANNELS.length}`);
     console.log("==============================================");
 
-    const sourceEntity = await client.getEntity(SOURCE_CHANNEL);
-    const sourceEntityId = sourceEntity.id ? String(sourceEntity.id).replace("-100", "") : "";
-    console.log(`✅ Source channel found: ${SOURCE_CHANNEL} (ID: ${sourceEntityId})`);
-
     for (const destination of DESTINATION_CHANNELS) {
         try {
             await client.getEntity(destination);
             console.log(`✅ Target channel found: ${destination}`);
         } catch (error) {
-            console.error(`❌ Target channel not found: ${destination}`);
+            console.error(`❌ Target channel not found or no access: ${destination}`);
         }
     }
 
@@ -406,6 +400,7 @@ async function main() {
     console.log(`👀 Watching ${SOURCE_CHANNEL}`);
     console.log("==============================================");
 
+    // Универсальный Event Listener (ফিল্টার ছাড়াই সব মেসেজ ধরে চেক করবে)
     client.addEventHandler(
         async (event) => {
             const message = event.message;
@@ -413,15 +408,13 @@ async function main() {
 
             try {
                 const chat = await message.getChat().catch(() => null);
-                const chatIdStr = message.chatId ? String(message.chatId).replace("-100", "") : "";
-                const currentUsername = chat && chat.username ? normalizeUsername(chat.username) : "";
+                if (!chat) return;
+
+                const currentUsername = chat.username ? normalizeUsername(chat.username) : "";
                 const sourceUsername = normalizeUsername(SOURCE_CHANNEL);
 
-                const isMatch = 
-                    (sourceEntityId && chatIdStr && chatIdStr === sourceEntityId) ||
-                    (sourceUsername && currentUsername && currentUsername === sourceUsername);
-
-                if (!isMatch) return;
+                // শুধু সোর্স চ্যানেলের মেসেজ হলেই প্রসেস করবে
+                if (currentUsername !== sourceUsername) return;
 
                 if (isAlreadyProcessed(`${sourceUsername}_${message.id}`)) return;
 
@@ -431,10 +424,7 @@ async function main() {
                     message.caption ||
                     "";
 
-                if (!rawText.trim()) {
-                    console.log("⚠️ Source post has no text.");
-                    return;
-                }
+                if (!rawText.trim()) return;
 
                 console.log("");
                 console.log("==============================================");
@@ -486,9 +476,7 @@ async function main() {
                 console.error("❌ MESSAGE ERROR:", error.message);
             }
         },
-        new NewMessage({
-            chats: [SOURCE_CHANNEL]
-        })
+        new NewMessage({}) // ফিল্টার উঠিয়ে দেওয়া হলো যাতে সব মেসেজ রিচ করতে পারে
     );
 
     setInterval(
