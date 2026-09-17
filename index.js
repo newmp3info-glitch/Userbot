@@ -24,7 +24,7 @@ const GITHUB_BRANCH = "main";
 // SOURCE CHANNEL
 // ============================================================
 
-const SOURCE_CHANNEL = "@YonoSecretPromoCodes";
+const SOURCE_CHANNEL = "@TtYonoSecretPromoCodes";
 
 // ============================================================
 // 8 DESTINATION CHANNELS
