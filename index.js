@@ -21,7 +21,7 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL
+// SOURCE CHANNEL (নতুন সোর্স চ্যানেল সেট করা হলো)
 // ============================================================
 
 const SOURCE_CHANNEL = "@YonoSecretPromoCodes";
@@ -32,6 +32,12 @@ const SOURCE_CHANNEL = "@YonoSecretPromoCodes";
 
 const DESTINATION_CHANNELS = [
     "@totalyonocode",
+    "@fullyonocode",
+    "@superyonocode",
+    "@LootYonoCode",
+    "@FastYonoCode",
+    "@RealYonoCode",
+    "@VipFreeYonoCode",
     "@WinRummynet"
 ];
 
@@ -77,7 +83,7 @@ const GAME_LINKS = {
     "ind rummy": "https://indrummy7.com/?code=2BA8ADDPWEJ&t=1749436463",
     "abc rummy": "https://www.22abcrummy.com/?code=75C92CLAD92&t=1779814560",
     "ind slots": "https://indslots3.com/?code=EYMCJP1NA2C&t=1743100179",
-    "101z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
+    "101 z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
     "spin gold": "https://spingoldagents.net/?code=HLTS5ALTUNW&t=1743100758",
     "spin crush": "https://spincrush45.com/?code=ADEX467GURD&t=1743101621",
     "mbm bet": "https://mbmbet7.com/?code=UPHMEWS56EM&t=1748511523",
@@ -92,7 +98,6 @@ const GAME_LINKS = {
     "slots winner": "https://www.slotswinnerhp.com/?code=PGVHTFC4C4K&t=1779813551",
     "inr rummy": "https://inrrummy.cc/?code=JMQESK3J5UR&t=1767494008",
     "saga slots": "https://sagaslotsw.com/?code=0QHPZS4EJXM&t=1747969670",
-    "yono 777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205",
     "yono 777": "https://freeyono777bonus.com/?code=F9MQW121H9H&t=1750740205",
     "yn 777": "https://www.y754.com/?code=4SWJ2Z2RNC2&t=1759154214",
     "max rummy": "https://www.maxrummy444.com/?code=QUMF17KD7HQ&t=1783566553",
@@ -128,7 +133,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// FIXED FULL GAME NAME DETECTION (Captures Bet-213 fully without cutting)
+// PERFECT GAME NAME DETECTION (Keeps full names like Bet-213)
 // ============================================================
 
 function extractGameName(rawText) {
@@ -138,10 +143,10 @@ function extractGameName(rawText) {
     
     for (const line of lines) {
         if (/new\s*promocode|promocode|claim/i.test(line)) {
-            const match = line.match(/^(.*?)(?:\s+New|\s+PromoCode|\s+Claim)/i);
-            if (match && match[1]) {
-                let namePart = match[1].replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-                namePart = namePart.replace(/[\/\–\—\>\:]+/g, " ").trim();
+            const parts = line.split(/new\s*promocode|promocode|claim/i);
+            if (parts[0]) {
+                let namePart = parts[0].replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
+                namePart = namePart.replace(/[\/\–\—\>\:]+$/, "").trim();
                 namePart = namePart.replace(/\s+/g, " ").trim();
                 if (namePart.length > 0) {
                     return namePart;
@@ -151,10 +156,9 @@ function extractGameName(rawText) {
     }
 
     if (lines.length > 0) {
-        const match = lines[0].match(/^(.*?)(?:\s+New|\s+PromoCode|\s+Claim)/i);
-        let firstLine = match && match[1] ? match[1] : lines[0];
+        let firstLine = lines[0].replace(/new\s*promocode.*$/i, "").trim();
         firstLine = firstLine.replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').trim();
-        firstLine = firstLine.replace(/[\/\–\—\>\:]+/g, " ").trim();
+        firstLine = firstLine.replace(/[\/\–\—\>\:]+$/, "").trim();
         firstLine = firstLine.replace(/\s+/g, " ").trim();
         if (firstLine.length > 0) {
             return firstLine;
