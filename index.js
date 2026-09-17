@@ -83,7 +83,7 @@ const GAME_LINKS = {
     "ind rummy": "https://indrummy7.com/?code=2BA8ADDPWEJ&t=1749436463",
     "abc rummy": "https://www.22abcrummy.com/?code=75C92CLAD92&t=1779814560",
     "ind slots": "https://indslots3.com/?code=EYMCJP1NA2C&t=1743100179",
-    "101z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
+    "101 z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
     "spin gold": "https://spingoldagents.net/?code=HLTS5ALTUNW&t=1743100758",
     "spin crush": "https://spincrush45.com/?code=ADEX467GURD&t=1743101621",
     "mbm bet": "https://mbmbet7.com/?code=UPHMEWS56EM&t=1748511523",
