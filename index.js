@@ -21,13 +21,13 @@ const REPO_NAME = "Userbot";
 const GITHUB_BRANCH = "main";
 
 // ============================================================
-// SOURCE CHANNEL (নতুন সোর্স চ্যানেল সেট করা হলো)
+// SOURCE CHANNEL
 // ============================================================
 
 const SOURCE_CHANNEL = "@YonoSecretPromoCodes";
 
 // ============================================================
-// 8 DESTINATION CHANNELS
+// 10 DESTINATION CHANNELS (এখানে মোট ১০টি চ্যানেল সেট করা হয়েছে)
 // ============================================================
 
 const DESTINATION_CHANNELS = [
@@ -38,7 +38,9 @@ const DESTINATION_CHANNELS = [
     "@FastYonoCode",
     "@RealYonoCode",
     "@VipFreeYonoCode",
-    "@WinRummynet"
+    "@WinRummynet",
+    "@VipYonoFreeCode",
+    "@AllYonoRummyCode"
 ];
 
 // ============================================================
@@ -83,7 +85,7 @@ const GAME_LINKS = {
     "ind rummy": "https://indrummy7.com/?code=2BA8ADDPWEJ&t=1749436463",
     "abc rummy": "https://www.22abcrummy.com/?code=75C92CLAD92&t=1779814560",
     "ind slots": "https://indslots3.com/?code=EYMCJP1NA2C&t=1743100179",
-    "101 z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
+    "101z": "https://101zvip9.com/?code=398FPM6Q9PM&t=1747968336",
     "spin gold": "https://spingoldagents.net/?code=HLTS5ALTUNW&t=1743100758",
     "spin crush": "https://spincrush45.com/?code=ADEX467GURD&t=1743101621",
     "mbm bet": "https://mbmbet7.com/?code=UPHMEWS56EM&t=1748511523",
@@ -133,7 +135,7 @@ function escapeHtml(value) {
 }
 
 // ============================================================
-// PERFECT GAME NAME DETECTION (Keeps full names like Bet-213)
+// GAME NAME DETECTION
 // ============================================================
 
 function extractGameName(rawText) {
@@ -169,7 +171,7 @@ function extractGameName(rawText) {
 }
 
 // ============================================================
-// CLEAN PROMO CODE DETECTION
+// PROMO CODE DETECTION
 // ============================================================
 
 function extractPromoCode(rawText) {
@@ -203,7 +205,7 @@ function extractPromoCode(rawText) {
 }
 
 // ============================================================
-// SMART GAME LINK FINDER (Longest-first matching)
+// GAME LINK FINDER
 // ============================================================
 
 function findGameLink(gameName) {
@@ -226,7 +228,7 @@ function findGameLink(gameName) {
 }
 
 // ============================================================
-// CLEAN TEMPLATE
+// TEMPLATE
 // ============================================================
 
 function buildCaption(
